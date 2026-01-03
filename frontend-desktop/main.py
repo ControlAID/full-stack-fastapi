@@ -107,6 +107,10 @@ def start_main_app():
     if login_window:
         login_window.close()
 
+# Global variables
+login_window = None
+main_window = None
+
 def main():
     app = QApplication(sys.argv)
     

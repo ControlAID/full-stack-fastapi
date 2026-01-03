@@ -24,12 +24,19 @@ class LicenseService:
         params = {"device_id": self.mac_address}
 
         try:
+            print(f"DEBUG: Checking binding for MAC: {self.mac_address}")
+            print(f"DEBUG: Request URL: {url}")
+            print(f"DEBUG: Params: {params}")
+            
             response = requests.get(url, headers=headers, params=params)
+            print(f"DEBUG: Status Code: {response.status_code}")
+            print(f"DEBUG: Response Body: {response.text}")
             
             if response.status_code == 200:
                 data = response.json()
                 if data and len(data) > 0:
                     # Found matching AP
+                    print(f"DEBUG: Found AP: {data[0]['name']}")
                     return {"bound": True, "access_point": data[0], "message": "Device bound"}
                 else:
                     return {"bound": False, "access_point": None, "message": "Device not found in registry"}
@@ -39,6 +46,7 @@ class LicenseService:
                 return {"bound": False, "access_point": None, "message": f"Server error: {response.status_code}"}
                 
         except Exception as e:
+            print(f"DEBUG: Exception: {e}")
             return {"bound": False, "access_point": None, "message": f"Connection error: {e}"}
 
     def register_device(self, name: str, location: str) -> bool:
