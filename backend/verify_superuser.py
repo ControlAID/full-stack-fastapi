@@ -25,7 +25,14 @@ def verify(email, password):
             is_valid = security.verify_password(password, user.hashed_password)
             if is_valid:
                 print(f"Success: Password for {email} is correct")
-                print(f"User details: Superuser={user.is_superuser}, Active={user.is_active}")
+                print(f"User details: Name={user.full_name}, Superuser={user.is_superuser}, Active={user.is_active}")
+                
+                if user.full_name != "Admin":
+                    print(f"Updating full_name from '{user.full_name}' to 'Admin'...")
+                    user.full_name = "Admin"
+                    session.add(user)
+                    session.commit()
+                    print("Full name updated successfully.")
                 return True
             else:
                 print(f"Error: Incorrect password for {email}")

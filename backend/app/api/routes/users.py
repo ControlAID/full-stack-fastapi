@@ -96,6 +96,30 @@ def create_user(*, session: SessionDep, request: Request, user_in: UserCreate, c
             detail="The user with this email already exists in the system.",
         )
 
+    # Enforce License Limits (Max Users) if creating a user for an organization
+    # If superuser creates a user without org, skip. If org is set, check.
+    org_id_to_check = user_in.organization_id or (current_user.organization_id if not current_user.is_superuser else None)
+    
+    if org_id_to_check:
+        from app.models import License
+        # Get active license
+        statement = select(License).where(
+            License.organization_id == org_id_to_check,
+            License.is_active == True
+        ).order_by(License.created_at.desc())
+        active_license = session.exec(statement).first()
+        
+        if active_license:
+             # Count existing users in org
+             count_statement = select(func.count()).select_from(User).where(User.organization_id == org_id_to_check)
+             current_user_count = session.exec(count_statement).one()
+             
+             if current_user_count >= active_license.max_users:
+                 raise HTTPException(
+                     status_code=403, 
+                     detail=f"License limit reached. Max users: {active_license.max_users}"
+                 )
+
     # Multi-tenancy logic
     if not current_user.is_superuser:
         user_in.organization_id = current_user.organization_id
