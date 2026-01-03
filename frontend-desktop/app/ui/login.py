@@ -14,20 +14,8 @@ class LoginWindow(QWidget):
     def init_ui(self):
         self.setWindowTitle("ControlAI - Login")
         self.setFixedSize(400, 500)
-        self.setStyleSheet("""
-            QWidget { background-color: #f5f5f5; }
-            QFrame { background-color: white; border-radius: 10px; padding: 20px; }
-            QLineEdit { padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-            QPushButton { 
-                padding: 10px; 
-                background-color: #007bff; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                font-weight: bold;
-            }
-            QPushButton:hover { background-color: #0056b3; }
-        """)
+        # Using qt-material theme, removing hardcoded styles
+        # self.setStyleSheet(...) 
 
         layout = QVBoxLayout(self)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -40,13 +28,13 @@ class LoginWindow(QWidget):
         # Title
         title = QLabel("ControlAI")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setStyleSheet("font-size: 24px; font-weight: bold; color: #333; margin-bottom: 20px;")
+        title.setProperty("class", "danger") # Use material classes if supported or just inherit
         card_layout.addWidget(title)
         
         # Subtitle
         subtitle = QLabel("Monitoring Station")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        subtitle.setStyleSheet("font-size: 16px; color: #666; margin-bottom: 20px;")
+        # subtitle.setStyleSheet("font-size: 16px; color: #666; margin-bottom: 20px;")
         card_layout.addWidget(subtitle)
 
         # Inputs

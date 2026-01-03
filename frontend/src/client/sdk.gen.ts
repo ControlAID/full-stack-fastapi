@@ -3,7 +3,122 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleAuditStatsGetSummaryResponse, ModuleQrGetStatusResponse, ModuleWeatherConnectorGetCurrentWeatherData, ModuleWeatherConnectorGetCurrentWeatherResponse, MonitoringGetMetricsResponse, MonitoringGetLogsData, MonitoringGetLogsResponse, MonitoringGetModulesResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, OrganizationsReadOrganizationUsersData, OrganizationsReadOrganizationUsersResponse, OrganizationsReadOrganizationLicensesData, OrganizationsReadOrganizationLicensesResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { AccessPointsReadAccessPointsData, AccessPointsReadAccessPointsResponse, AccessPointsCreateAccessPointData, AccessPointsCreateAccessPointResponse, AccessPointsReadAccessPointData, AccessPointsReadAccessPointResponse, AccessPointsUpdateAccessPointData, AccessPointsUpdateAccessPointResponse, AccessPointsDeleteAccessPointData, AccessPointsDeleteAccessPointResponse, LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleAuditStatsGetSummaryResponse, ModuleQrGetStatusResponse, ModulesDownloadModuleData, ModulesDownloadModuleResponse, ModuleWeatherConnectorGetCurrentWeatherData, ModuleWeatherConnectorGetCurrentWeatherResponse, MonitoringGetMetricsResponse, MonitoringGetLogsData, MonitoringGetLogsResponse, MonitoringGetModulesResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, OrganizationsReadOrganizationUsersData, OrganizationsReadOrganizationUsersResponse, OrganizationsReadOrganizationLicensesData, OrganizationsReadOrganizationLicensesResponse, PrivateCreateUserData, PrivateCreateUserResponse, UnitsReadUnitsData, UnitsReadUnitsResponse, UnitsCreateUnitData, UnitsCreateUnitResponse, UnitsUpdateUnitData, UnitsUpdateUnitResponse, UnitsDeleteUnitData, UnitsDeleteUnitResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UsersCreateSubUserData, UsersCreateSubUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class AccessPointsService {
+    /**
+     * Read Access Points
+     * Retrieve access points.
+     * - Superusers can see all.
+     * - Organization admins/users see only their organization's APs.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.deviceId
+     * @returns AccessPointPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAccessPoints(data: AccessPointsReadAccessPointsData = {}): CancelablePromise<AccessPointsReadAccessPointsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/access-points/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                device_id: data.deviceId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Access Point
+     * Create new access point.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns AccessPointPublic Successful Response
+     * @throws ApiError
+     */
+    public static createAccessPoint(data: AccessPointsCreateAccessPointData): CancelablePromise<AccessPointsCreateAccessPointResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/access-points/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Access Point
+     * Get access point by ID.
+     * @param data The data for the request.
+     * @param data.accessPointId
+     * @returns AccessPointPublic Successful Response
+     * @throws ApiError
+     */
+    public static readAccessPoint(data: AccessPointsReadAccessPointData): CancelablePromise<AccessPointsReadAccessPointResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/access-points/{access_point_id}',
+            path: {
+                access_point_id: data.accessPointId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Access Point
+     * Update an access point.
+     * @param data The data for the request.
+     * @param data.accessPointId
+     * @param data.requestBody
+     * @returns AccessPointPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateAccessPoint(data: AccessPointsUpdateAccessPointData): CancelablePromise<AccessPointsUpdateAccessPointResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/access-points/{access_point_id}',
+            path: {
+                access_point_id: data.accessPointId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Access Point
+     * Delete an access point.
+     * @param data The data for the request.
+     * @param data.accessPointId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteAccessPoint(data: AccessPointsDeleteAccessPointData): CancelablePromise<AccessPointsDeleteAccessPointResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/access-points/{access_point_id}',
+            path: {
+                access_point_id: data.accessPointId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class LicensesService {
     /**
@@ -216,7 +331,7 @@ export class LoginService {
 export class ModuleAuditStatsService {
     /**
      * Get Summary
-     * Retorna un resumen de logs por nivel.
+     * Retorna estadísticas avanzadas de logs agrupadas por nivel y tiempo.
      * @returns unknown Successful Response
      * @throws ApiError
      */
@@ -242,10 +357,34 @@ export class ModuleQrService {
     }
 }
 
+export class ModulesService {
+    /**
+     * Download Module
+     * Download the client-side package for a module as a Zip file.
+     * Only allows downloading modules that exist in plugins/local or plugins/external.
+     * @param data The data for the request.
+     * @param data.moduleName
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static downloadModule(data: ModulesDownloadModuleData): CancelablePromise<ModulesDownloadModuleResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/modules/{module_name}/download',
+            path: {
+                module_name: data.moduleName
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
 export class ModuleWeatherConnectorService {
     /**
      * Get Current Weather
-     * Simula la obtención de clima desde una API externa.
+     * Obtiene el clima real desde wttr.in (formato JSON).
      * @param data The data for the request.
      * @param data.city
      * @returns unknown Successful Response
@@ -507,6 +646,96 @@ export class PrivateService {
     }
 }
 
+export class UnitsService {
+    /**
+     * Read Units
+     * Retrieve units for current user's organization.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns OrganizationUnitPublic Successful Response
+     * @throws ApiError
+     */
+    public static readUnits(data: UnitsReadUnitsData = {}): CancelablePromise<UnitsReadUnitsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/units/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Unit
+     * Create new unit (Apartment, Office, etc).
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns OrganizationUnitPublic Successful Response
+     * @throws ApiError
+     */
+    public static createUnit(data: UnitsCreateUnitData): CancelablePromise<UnitsCreateUnitResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/units/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Unit
+     * Update a unit.
+     * @param data The data for the request.
+     * @param data.unitId
+     * @param data.requestBody
+     * @returns OrganizationUnitPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateUnit(data: UnitsUpdateUnitData): CancelablePromise<UnitsUpdateUnitResponse> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/v1/units/{unit_id}',
+            path: {
+                unit_id: data.unitId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Unit
+     * Delete a unit.
+     * @param data The data for the request.
+     * @param data.unitId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteUnit(data: UnitsDeleteUnitData): CancelablePromise<UnitsDeleteUnitResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/units/{unit_id}',
+            path: {
+                unit_id: data.unitId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
 export class UsersService {
     /**
      * Read Users
@@ -697,6 +926,27 @@ export class UsersService {
             path: {
                 user_id: data.userId
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Sub User
+     * Create a sub-user (Family/Employee) linked to the current user (Head of Household).
+     * Current User must be 'is_primary_unit_user' or Admin.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns UserPublic Successful Response
+     * @throws ApiError
+     */
+    public static createSubUser(data: UsersCreateSubUserData): CancelablePromise<UsersCreateSubUserResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/users/family',
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }

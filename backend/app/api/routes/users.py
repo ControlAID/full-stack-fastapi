@@ -24,6 +24,8 @@ from app.models import (
     UserPublic,
     UserRegister,
     UsersPublic,
+    UsersPublic,
+    UserRole,
     UserUpdate,
     UserUpdateMe,
 )
@@ -56,6 +58,8 @@ def read_users(
         for db_user, org_name in results:
             user_public = UserPublic.model_validate(db_user)
             user_public.organization_name = org_name
+            if db_user.unit:
+                user_public.unit_name = db_user.unit.name
             users.append(user_public)
     else:
         # For organization admins, only show users in their organization
@@ -77,6 +81,8 @@ def read_users(
         for db_user, org_name in results:
             user_public = UserPublic.model_validate(db_user)
             user_public.organization_name = org_name
+            if db_user.unit:
+                user_public.unit_name = db_user.unit.name
             users.append(user_public)
 
     return UsersPublic(data=users, count=count)
@@ -405,3 +411,36 @@ def delete_user(
     session.delete(db_user)
     session.commit()
     return Message(message="User deleted successfully")
+
+@router.post("/family", response_model=UserPublic)
+def create_sub_user(
+    *, session: SessionDep, user_in: UserCreate, current_user: CurrentUser
+) -> Any:
+    """
+    Create a sub-user (Family/Employee) linked to the current user (Head of Household).
+    Current User must be 'is_primary_unit_user' or Admin.
+    """
+    # Verify permissions
+    if not current_user.is_superuser:
+        if not (current_user.organization_id and current_user.unit_id):
+             raise HTTPException(status_code=400, detail="User must belong to a unit")
+        
+        # Check if primary user or special role? 
+        if not current_user.is_primary_unit_user:
+             raise HTTPException(status_code=403, detail="Only the primary unit user can add family members")
+        
+        # Enforce same organization and unit
+        if user_in.organization_id and user_in.organization_id != current_user.organization_id:
+             raise HTTPException(status_code=400, detail="Cannot add user to different organization")
+             
+        user_in.organization_id = current_user.organization_id
+        user_in.unit_id = current_user.unit_id
+        user_in.parent_id = current_user.id # Link to parent
+        user_in.role = UserRole.RESIDENT # Or inherit
+        user_in.is_primary_unit_user = False # Sub-users are not primary by default
+
+    user = User.model_validate(user_in, update={"hashed_password": get_password_hash(user_in.password)})
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user

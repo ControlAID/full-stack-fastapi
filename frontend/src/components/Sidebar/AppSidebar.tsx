@@ -23,9 +23,9 @@ export function AppSidebar() {
     ? [
       ...baseItems,
       { icon: Users, title: "Users", path: "/admin" },
-      { icon: Building2, title: "Organizations", path: "/organizations" },
-      { icon: Key, title: "Licenses", path: "/licenses" },
-      { icon: ScrollText, title: "Audit Logs", path: "/logs" },
+      { icon: Building2, title: "Organizations", path: "/admin/organizations" },
+      { icon: Key, title: "Licenses", path: "/admin/licenses" },
+      { icon: ScrollText, title: "Audit Logs", path: "/admin/logs" },
     ]
     : baseItems
 

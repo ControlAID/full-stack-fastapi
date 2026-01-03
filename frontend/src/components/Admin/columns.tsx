@@ -48,12 +48,21 @@ export const columns: ColumnDef<UserTableData>[] = [
     ),
   },
   {
-    accessorKey: "is_superuser",
+    accessorKey: "role",
     header: "Role",
     cell: ({ row }) => (
       <Badge variant={row.original.is_superuser ? "default" : "secondary"}>
-        {row.original.is_superuser ? "Superuser" : "User"}
+        {row.original.is_superuser ? "Superuser" : (row.original.role || "User")}
       </Badge>
+    ),
+  },
+  {
+    accessorKey: "unit_name",
+    header: "Unit",
+    cell: ({ row }) => (
+      <span className={cn(!row.original.unit_name && "text-muted-foreground italic text-xs")}>
+        {row.original.unit_name || "-"}
+      </span>
     ),
   },
   {

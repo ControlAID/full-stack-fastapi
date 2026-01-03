@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type OrganizationCreate, OrganizationsService } from "@/client"
+import { type OrganizationCreate, type OrganizationType, OrganizationsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -27,6 +27,13 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -77,7 +84,11 @@ const AddOrganization = () => {
     })
 
     const onSubmit = (data: FormData) => {
-        mutation.mutate(data)
+        const submitData: OrganizationCreate = {
+            ...data,
+            type: data.type as OrganizationType,
+        }
+        mutation.mutate(submitData)
     }
 
     return (
@@ -122,9 +133,20 @@ const AddOrganization = () => {
                                         <FormLabel>
                                             Type <span className="text-destructive">*</span>
                                         </FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Startups" {...field} />
-                                        </FormControl>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="residential">Residential</SelectItem>
+                                                <SelectItem value="office">Office</SelectItem>
+                                                <SelectItem value="commercial">Commercial</SelectItem>
+                                                <SelectItem value="parking">Parking</SelectItem>
+                                                <SelectItem value="private">Private</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}

@@ -86,22 +86,16 @@ class DashboardModule(ClientModule):
 
     def create_card(self, title_text, label, progress_bar):
         frame = QFrame()
-        frame.setStyleSheet("""
-            QFrame { 
-                background-color: white; 
-                border-radius: 10px; 
-                border: 1px solid #e0e0e0;
-            }
-        """)
+        # frame.setStyleSheet(...) # Removed manual styling
         
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(20, 20, 20, 20)
         
         title = QLabel(title_text)
-        title.setStyleSheet("font-size: 16px; font-weight: bold; color: #555; border: none;")
+        # title.setStyleSheet("font-size: 16px; font-weight: bold; color: #555; border: none;")
         layout.addWidget(title)
         
-        label.setStyleSheet("font-size: 14px; color: #666; margin-bottom: 5px; border: none;")
+        # label.setStyleSheet("font-size: 14px; color: #666; margin-bottom: 5px; border: none;")
         layout.addWidget(label)
         layout.addWidget(progress_bar)
         

@@ -27,6 +27,13 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -38,6 +45,7 @@ interface EditOrganizationProps {
 
 const formSchema = z.object({
     name: z.string().min(1, { message: "Name is required" }),
+    type: z.string().min(1, { message: "Type is required" }),
     contact_email: z.string().email({ message: "Invalid email" }).optional().or(z.literal('')),
     is_active: z.boolean(),
 })
@@ -54,6 +62,7 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
         mode: "onBlur",
         defaultValues: {
             name: organization.name,
+            type: organization.type,
             contact_email: organization.contact_email || "",
             is_active: organization.is_active,
         },
@@ -79,6 +88,7 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
     const onSubmit = (data: FormData) => {
         mutation.mutate({
             name: data.name,
+            type: data.type as any,
             contact_email: data.contact_email || null, // Send null if empty string to clear it
             is_active: data.is_active,
         })
@@ -114,6 +124,33 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
                                         <FormControl>
                                             <Input placeholder="Organization Name" {...field} />
                                         </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="type"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Type <span className="text-destructive">*</span>
+                                        </FormLabel>
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="residential">Residential</SelectItem>
+                                                <SelectItem value="office">Office</SelectItem>
+                                                <SelectItem value="commercial">Commercial</SelectItem>
+                                                <SelectItem value="parking">Parking</SelectItem>
+                                                <SelectItem value="private">Private</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -163,7 +200,7 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     )
 }
 
