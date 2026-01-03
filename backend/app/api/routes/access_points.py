@@ -24,16 +24,30 @@ router = APIRouter(prefix="/access-points", tags=["access-points"])
 
 @router.get(
     "/",
-    dependencies=[Depends(get_current_active_superuser)],
+    # dependencies=[Depends(get_current_active_superuser)], # Removed strict superuser dependency
     response_model=list[AccessPointPublic],
 )
 def read_access_points(
-    session: SessionDep, skip: int = 0, limit: int = 100
+    session: SessionDep, 
+    current_user: CurrentUser,
+    skip: int = 0, 
+    limit: int = 100,
+    device_id: str | None = None
 ) -> Any:
     """
-    Retrieve access points. (Superuser only)
+    Retrieve access points. 
+    - Superusers can see all.
+    - Organization admins/users see only their organization's APs.
     """
-    statement = select(AccessPoint).offset(skip).limit(limit)
+    if current_user.is_superuser:
+        statement = select(AccessPoint)
+    else:
+        statement = select(AccessPoint).where(AccessPoint.organization_id == current_user.organization_id)
+    
+    if device_id:
+        statement = statement.where(AccessPoint.device_id == device_id)
+        
+    statement = statement.offset(skip).limit(limit)
     access_points = session.exec(statement).all()
     return access_points
 
