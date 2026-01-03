@@ -48,7 +48,7 @@ services:
   db:
     restart: "no"
     ports:
-      - "5432:5432"
+      - "5433:5432"
 
   adminer:
     restart: "no"
@@ -61,30 +61,31 @@ services:
       - "8000:8000"
     build:
       context: ./backend
-    # command: sleep infinity  # Infinite loop to keep container alive doing nothing
+
+    # Montar código fuente para hot-reloading
+    volumes:
+      - ./backend:/app
+      - /app/.venv # Proteger el entorno virtual del contenedor
+      - ./backend/htmlcov:/app/htmlcov
     command:
       - fastapi
       - run
       - --reload
       - "app/main.py"
-    develop:
-      watch:
-        - path: ./backend
-          action: sync
-          target: /app
-          ignore:
-            - ./backend/.venv
-            - .venv
-        - path: ./backend/pyproject.toml
-          action: rebuild
-    # TODO: remove once coverage is done locally
-    volumes:
-      - ./backend/htmlcov:/app/htmlcov
     environment:
       SMTP_HOST: "mailcatcher"
       SMTP_PORT: "1025"
       SMTP_TLS: "false"
       EMAILS_FROM_EMAIL: "noreply@example.com"
+
+  prestart:
+    restart: "no"
+    build:
+      context: ./backend
+    volumes:
+      - ./backend:/app
+      - /app/.venv
+
 
   mailcatcher:
     image: schickling/mailcatcher
@@ -95,12 +96,19 @@ services:
   frontend:
     restart: "no"
     ports:
-      - "5173:80"
+      - "5173:5173" # Puerto Vite por defecto
     build:
       context: ./frontend
+      target: build-stage
       args:
         - VITE_API_URL=http://localhost:8000
         - NODE_ENV=development
+    # Montar código fuente y evitar conflicto de node_modules
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    # Usar servidor de desarrollo de Vite
+    command: npm run dev -- --host
 
   playwright:
     build:

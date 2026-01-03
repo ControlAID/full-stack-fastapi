@@ -69,105 +69,219 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
-export const ItemCreateSchema = {
+export const LicenseCreateSchema = {
     properties: {
-        title: {
-            type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
+        tier: {
+            '$ref': '#/components/schemas/LicenseTier'
         },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
+        addon_modules: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Addon Modules',
+            default: []
+        },
+        max_locations: {
+            type: 'integer',
+            title: 'Max Locations'
+        },
+        max_users: {
+            type: 'integer',
+            title: 'Max Users'
+        },
+        max_devices: {
+            type: 'integer',
+            title: 'Max Devices'
+        },
+        valid_from: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Valid From'
+        },
+        valid_until: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Valid Until'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        },
+        license_key: {
+            type: 'string',
+            title: 'License Key'
+        },
+        organization_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Organization Id'
         }
     },
     type: 'object',
-    required: ['title'],
-    title: 'ItemCreate'
+    required: ['tier', 'max_locations', 'max_users', 'max_devices', 'valid_from', 'valid_until', 'license_key', 'organization_id'],
+    title: 'LicenseCreate'
 } as const;
 
-export const ItemPublicSchema = {
+export const LicensePublicSchema = {
     properties: {
-        title: {
-            type: 'string',
-            maxLength: 255,
-            minLength: 1,
-            title: 'Title'
+        tier: {
+            '$ref': '#/components/schemas/LicenseTier'
         },
-        description: {
-            anyOf: [
-                {
-                    type: 'string',
-                    maxLength: 255
-                },
-                {
-                    type: 'null'
-                }
-            ],
-            title: 'Description'
+        addon_modules: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Addon Modules',
+            default: []
+        },
+        max_locations: {
+            type: 'integer',
+            title: 'Max Locations'
+        },
+        max_users: {
+            type: 'integer',
+            title: 'Max Users'
+        },
+        max_devices: {
+            type: 'integer',
+            title: 'Max Devices'
+        },
+        valid_from: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Valid From'
+        },
+        valid_until: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Valid Until'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        },
+        license_key: {
+            type: 'string',
+            title: 'License Key'
         },
         id: {
             type: 'string',
             format: 'uuid',
             title: 'Id'
         },
-        owner_id: {
+        organization_id: {
             type: 'string',
             format: 'uuid',
-            title: 'Owner Id'
+            title: 'Organization Id'
         }
     },
     type: 'object',
-    required: ['title', 'id', 'owner_id'],
-    title: 'ItemPublic'
+    required: ['tier', 'max_locations', 'max_users', 'max_devices', 'valid_from', 'valid_until', 'license_key', 'id', 'organization_id'],
+    title: 'LicensePublic'
 } as const;
 
-export const ItemUpdateSchema = {
+export const LicenseTierSchema = {
+    type: 'string',
+    enum: ['starter', 'business', 'enterprise'],
+    title: 'LicenseTier'
+} as const;
+
+export const LicenseUpdateSchema = {
     properties: {
-        title: {
+        tier: {
             anyOf: [
                 {
-                    type: 'string',
-                    maxLength: 255,
-                    minLength: 1
+                    '$ref': '#/components/schemas/LicenseTier'
                 },
                 {
                     type: 'null'
                 }
-            ],
-            title: 'Title'
+            ]
         },
-        description: {
+        max_locations: {
             anyOf: [
                 {
-                    type: 'string',
-                    maxLength: 255
+                    type: 'integer'
                 },
                 {
                     type: 'null'
                 }
             ],
-            title: 'Description'
+            title: 'Max Locations'
+        },
+        max_users: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Max Users'
+        },
+        max_devices: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Max Devices'
+        },
+        valid_until: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Valid Until'
+        },
+        is_active: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Active'
+        },
+        addon_modules: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Addon Modules'
         }
     },
     type: 'object',
-    title: 'ItemUpdate'
+    title: 'LicenseUpdate'
 } as const;
 
-export const ItemsPublicSchema = {
+export const LicensesPublicSchema = {
     properties: {
         data: {
             items: {
-                '$ref': '#/components/schemas/ItemPublic'
+                '$ref': '#/components/schemas/LicensePublic'
             },
             type: 'array',
             title: 'Data'
@@ -179,7 +293,7 @@ export const ItemsPublicSchema = {
     },
     type: 'object',
     required: ['data', 'count'],
-    title: 'ItemsPublic'
+    title: 'LicensesPublic'
 } as const;
 
 export const MessageSchema = {
@@ -210,6 +324,155 @@ export const NewPasswordSchema = {
     type: 'object',
     required: ['token', 'new_password'],
     title: 'NewPassword'
+} as const;
+
+export const OrganizationCreateSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        type: {
+            type: 'string',
+            title: 'Type'
+        },
+        address: {
+            type: 'string',
+            title: 'Address'
+        },
+        contact_email: {
+            type: 'string',
+            title: 'Contact Email'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        }
+    },
+    type: 'object',
+    required: ['name', 'type', 'address', 'contact_email'],
+    title: 'OrganizationCreate'
+} as const;
+
+export const OrganizationPublicSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        type: {
+            type: 'string',
+            title: 'Type'
+        },
+        address: {
+            type: 'string',
+            title: 'Address'
+        },
+        contact_email: {
+            type: 'string',
+            title: 'Contact Email'
+        },
+        is_active: {
+            type: 'boolean',
+            title: 'Is Active',
+            default: true
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        }
+    },
+    type: 'object',
+    required: ['name', 'type', 'address', 'contact_email', 'id', 'created_at'],
+    title: 'OrganizationPublic'
+} as const;
+
+export const OrganizationUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        type: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Type'
+        },
+        address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Address'
+        },
+        contact_email: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Contact Email'
+        },
+        is_active: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Active'
+        }
+    },
+    type: 'object',
+    title: 'OrganizationUpdate'
+} as const;
+
+export const OrganizationsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/OrganizationPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'OrganizationsPublic'
 } as const;
 
 export const PrivateUserCreateSchema = {
@@ -304,6 +567,18 @@ export const UserCreateSchema = {
             ],
             title: 'Full Name'
         },
+        organization_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Organization Id'
+        },
         password: {
             type: 'string',
             maxLength: 128,
@@ -345,6 +620,18 @@ export const UserPublicSchema = {
                 }
             ],
             title: 'Full Name'
+        },
+        organization_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Organization Id'
         },
         id: {
             type: 'string',
@@ -425,6 +712,18 @@ export const UserUpdateSchema = {
                 }
             ],
             title: 'Full Name'
+        },
+        organization_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Organization Id'
         },
         password: {
             anyOf: [

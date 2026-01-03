@@ -1,6 +1,10 @@
 import uuid
+from datetime import datetime
+from enum import Enum
+from typing import Optional, List, Dict, Any
 
 from pydantic import EmailStr
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -10,6 +14,7 @@ class UserBase(SQLModel):
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
+    organization_id: Optional[uuid.UUID] = Field(default=None, foreign_key="organization.id")
 
 
 # Properties to receive via API on creation
@@ -27,6 +32,7 @@ class UserRegister(SQLModel):
 class UserUpdate(UserBase):
     email: EmailStr | None = Field(default=None, max_length=255)  # type: ignore
     password: str | None = Field(default=None, min_length=8, max_length=128)
+    organization_id: Optional[uuid.UUID] = Field(default=None)
 
 
 class UserUpdateMe(SQLModel):
@@ -43,7 +49,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
+    organization: Optional["Organization"] = Relationship(back_populates="users")
 
 
 # Properties to return via API, id is always required
@@ -53,42 +59,6 @@ class UserPublic(UserBase):
 
 class UsersPublic(SQLModel):
     data: list[UserPublic]
-    count: int
-
-
-# Shared properties
-class ItemBase(SQLModel):
-    title: str = Field(min_length=1, max_length=255)
-    description: str | None = Field(default=None, max_length=255)
-
-
-# Properties to receive on item creation
-class ItemCreate(ItemBase):
-    pass
-
-
-# Properties to receive on item update
-class ItemUpdate(ItemBase):
-    title: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
-
-
-# Database model, database table inferred from class name
-class Item(ItemBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
-    owner: User | None = Relationship(back_populates="items")
-
-
-# Properties to return via API, id is always required
-class ItemPublic(ItemBase):
-    id: uuid.UUID
-    owner_id: uuid.UUID
-
-
-class ItemsPublic(SQLModel):
-    data: list[ItemPublic]
     count: int
 
 
@@ -111,3 +81,121 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# --- Security System Models ---
+
+# Organization Models
+class OrganizationBase(SQLModel):
+    name: str = Field(index=True)
+    type: str  # residential, office, commercial
+    address: str
+    contact_email: str
+    is_active: bool = True
+
+class OrganizationCreate(OrganizationBase):
+    pass
+
+class OrganizationUpdate(SQLModel):
+    name: str | None = None
+    type: str | None = None
+    address: str | None = None
+    contact_email: str | None = None
+    is_active: bool | None = None
+
+class Organization(OrganizationBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    users: list["User"] = Relationship(back_populates="organization")
+    licenses: list["License"] = Relationship(back_populates="organization")
+    access_points: list["AccessPoint"] = Relationship(back_populates="organization")
+
+class OrganizationPublic(OrganizationBase):
+    id: uuid.UUID
+    created_at: datetime
+
+class OrganizationsPublic(SQLModel):
+    data: list[OrganizationPublic]
+    count: int
+
+# License Models
+class LicenseTier(str, Enum):
+    STARTER = "starter"      # 1 location, QR basic
+    BUSINESS = "business"    # Multiple locations, QR + Face
+    ENTERPRISE = "enterprise" # Unlimited, All included
+
+class LicenseBase(SQLModel):
+    tier: LicenseTier
+    addon_modules: List[str] = Field(default=[], sa_column=Column(JSON))
+    max_locations: int
+    max_users: int
+    max_devices: int
+    valid_from: datetime
+    valid_until: datetime
+    is_active: bool = True
+    license_key: str = Field(unique=True, index=True)
+
+class LicenseCreate(LicenseBase):
+    organization_id: uuid.UUID
+
+class LicenseUpdate(SQLModel):
+    tier: LicenseTier | None = None
+    max_locations: int | None = None
+    max_users: int | None = None
+    max_devices: int | None = None
+    valid_until: datetime | None = None
+    is_active: bool | None = None
+    addon_modules: List[str] | None = None
+
+class License(LicenseBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    organization_id: uuid.UUID = Field(foreign_key="organization.id")
+    organization: Organization = Relationship(back_populates="licenses")
+
+class LicensePublic(LicenseBase):
+    id: uuid.UUID
+    organization_id: uuid.UUID
+
+class LicensesPublic(SQLModel):
+    data: list[LicensePublic]
+    count: int
+
+# Access Point Models
+class AccessPointBase(SQLModel):
+    name: str
+    location: str
+    device_id: str = Field(index=True)
+    enabled_modules: List[str] = Field(default=[], sa_column=Column(JSON))
+    is_active: bool = True
+
+class AccessPointCreate(AccessPointBase):
+    organization_id: uuid.UUID
+
+class AccessPointUpdate(SQLModel):
+    name: str | None = None
+    location: str | None = None
+    enabled_modules: List[str] | None = None
+    is_active: bool | None = None
+
+class AccessPoint(AccessPointBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    organization_id: uuid.UUID = Field(foreign_key="organization.id")
+    organization: Organization = Relationship(back_populates="access_points")
+
+class AccessPointPublic(AccessPointBase):
+    id: uuid.UUID
+    organization_id: uuid.UUID
+
+
+class AccessEvent(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    organization_id: uuid.UUID = Field(foreign_key="organization.id")
+    access_point_id: uuid.UUID = Field(foreign_key="accesspoint.id")
+    
+    user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
+    method: str  # qr, face, voice, manual
+    status: str  # granted, denied
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    
+    event_metadata: Dict[str, Any] = Field(default={}, sa_column=Column(JSON))

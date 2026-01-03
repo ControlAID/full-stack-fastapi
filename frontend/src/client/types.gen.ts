@@ -13,26 +13,48 @@ export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
-export type ItemCreate = {
-    title: string;
-    description?: (string | null);
+export type LicenseCreate = {
+    tier: LicenseTier;
+    addon_modules?: Array<(string)>;
+    max_locations: number;
+    max_users: number;
+    max_devices: number;
+    valid_from: string;
+    valid_until: string;
+    is_active?: boolean;
+    license_key: string;
+    organization_id: string;
 };
 
-export type ItemPublic = {
-    title: string;
-    description?: (string | null);
+export type LicensePublic = {
+    tier: LicenseTier;
+    addon_modules?: Array<(string)>;
+    max_locations: number;
+    max_users: number;
+    max_devices: number;
+    valid_from: string;
+    valid_until: string;
+    is_active?: boolean;
+    license_key: string;
     id: string;
-    owner_id: string;
+    organization_id: string;
 };
 
-export type ItemsPublic = {
-    data: Array<ItemPublic>;
+export type LicensesPublic = {
+    data: Array<LicensePublic>;
     count: number;
 };
 
-export type ItemUpdate = {
-    title?: (string | null);
-    description?: (string | null);
+export type LicenseTier = 'starter' | 'business' | 'enterprise';
+
+export type LicenseUpdate = {
+    tier?: (LicenseTier | null);
+    max_locations?: (number | null);
+    max_users?: (number | null);
+    max_devices?: (number | null);
+    valid_until?: (string | null);
+    is_active?: (boolean | null);
+    addon_modules?: (Array<(string)> | null);
 };
 
 export type Message = {
@@ -42,6 +64,37 @@ export type Message = {
 export type NewPassword = {
     token: string;
     new_password: string;
+};
+
+export type OrganizationCreate = {
+    name: string;
+    type: string;
+    address: string;
+    contact_email: string;
+    is_active?: boolean;
+};
+
+export type OrganizationPublic = {
+    name: string;
+    type: string;
+    address: string;
+    contact_email: string;
+    is_active?: boolean;
+    id: string;
+    created_at: string;
+};
+
+export type OrganizationsPublic = {
+    data: Array<OrganizationPublic>;
+    count: number;
+};
+
+export type OrganizationUpdate = {
+    name?: (string | null);
+    type?: (string | null);
+    address?: (string | null);
+    contact_email?: (string | null);
+    is_active?: (boolean | null);
 };
 
 export type PrivateUserCreate = {
@@ -66,6 +119,7 @@ export type UserCreate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    organization_id?: (string | null);
     password: string;
 };
 
@@ -74,6 +128,7 @@ export type UserPublic = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    organization_id?: (string | null);
     id: string;
 };
 
@@ -93,6 +148,7 @@ export type UserUpdate = {
     is_active?: boolean;
     is_superuser?: boolean;
     full_name?: (string | null);
+    organization_id?: (string | null);
     password?: (string | null);
 };
 
@@ -107,37 +163,37 @@ export type ValidationError = {
     type: string;
 };
 
-export type ItemsReadItemsData = {
+export type LicensesReadLicensesData = {
     limit?: number;
     skip?: number;
 };
 
-export type ItemsReadItemsResponse = (ItemsPublic);
+export type LicensesReadLicensesResponse = (LicensesPublic);
 
-export type ItemsCreateItemData = {
-    requestBody: ItemCreate;
+export type LicensesCreateLicenseData = {
+    requestBody: LicenseCreate;
 };
 
-export type ItemsCreateItemResponse = (ItemPublic);
+export type LicensesCreateLicenseResponse = (LicensePublic);
 
-export type ItemsReadItemData = {
-    id: string;
+export type LicensesReadLicenseData = {
+    licenseId: string;
 };
 
-export type ItemsReadItemResponse = (ItemPublic);
+export type LicensesReadLicenseResponse = (LicensePublic);
 
-export type ItemsUpdateItemData = {
-    id: string;
-    requestBody: ItemUpdate;
+export type LicensesUpdateLicenseData = {
+    licenseId: string;
+    requestBody: LicenseUpdate;
 };
 
-export type ItemsUpdateItemResponse = (ItemPublic);
+export type LicensesUpdateLicenseResponse = (LicensePublic);
 
-export type ItemsDeleteItemData = {
-    id: string;
+export type LicensesDeleteLicenseData = {
+    licenseId: string;
 };
 
-export type ItemsDeleteItemResponse = (Message);
+export type LicensesDeleteLicenseResponse = (Message);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
@@ -164,6 +220,40 @@ export type LoginRecoverPasswordHtmlContentData = {
 };
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
+
+export type ModuleQrGetStatusResponse = (unknown);
+
+export type OrganizationsReadOrganizationsData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type OrganizationsReadOrganizationsResponse = (OrganizationsPublic);
+
+export type OrganizationsCreateOrganizationData = {
+    requestBody: OrganizationCreate;
+};
+
+export type OrganizationsCreateOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsReadOrganizationData = {
+    organizationId: string;
+};
+
+export type OrganizationsReadOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsUpdateOrganizationData = {
+    organizationId: string;
+    requestBody: OrganizationUpdate;
+};
+
+export type OrganizationsUpdateOrganizationResponse = (OrganizationPublic);
+
+export type OrganizationsDeleteOrganizationData = {
+    organizationId: string;
+};
+
+export type OrganizationsDeleteOrganizationResponse = (Message);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

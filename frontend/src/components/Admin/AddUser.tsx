@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UserCreate, UsersService } from "@/client"
+import { type UserCreate, UsersService, OrganizationsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -27,8 +27,16 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import useAuth from "@/hooks/useAuth"
 import { handleError } from "@/utils"
 
 const formSchema = z
@@ -44,6 +52,7 @@ const formSchema = z
       .min(1, { message: "Please confirm your password" }),
     is_superuser: z.boolean(),
     is_active: z.boolean(),
+    organization_id: z.string().uuid().optional().or(z.literal('')),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "The passwords don't match",
@@ -56,6 +65,14 @@ const AddUser = () => {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
+  const { user: currentUser } = useAuth()
+
+  // Fetch organizations only if superuser
+  const { data: organizationsData } = useQuery({
+    queryKey: ["organizations"],
+    queryFn: () => OrganizationsService.readOrganizations({ skip: 0, limit: 100 }),
+    enabled: isOpen && !!currentUser?.is_superuser,
+  })
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -68,6 +85,7 @@ const AddUser = () => {
       confirm_password: "",
       is_superuser: false,
       is_active: false,
+      organization_id: "",
     },
   })
 
@@ -86,7 +104,10 @@ const AddUser = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
+    mutation.mutate({
+      ...data,
+      organization_id: data.organization_id || null, // Convert empty string to null
+    })
   }
 
   return (
@@ -141,6 +162,36 @@ const AddUser = () => {
                   </FormItem>
                 )}
               />
+
+              {currentUser?.is_superuser && (
+                <FormField
+                  control={form.control}
+                  name="organization_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select an organization (Optional)" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={"" /* Empty string for no organization (superusers/staff) */}>
+                            None (Global)
+                          </SelectItem>
+                          {organizationsData?.data.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

@@ -1,16 +1,10 @@
 from sqlmodel import Session, create_engine, select
 
-from app import crud
 from app.core.config import settings
 from app.models import User, UserCreate
+from app.core.security import get_password_hash
 
 engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
-
-
-# make sure all SQLModel models are imported (app.models) before initializing DB
-# otherwise, SQLModel might fail to initialize relationships properly
-# for more details: https://github.com/fastapi/full-stack-fastapi-template/issues/28
-
 
 def init_db(session: Session) -> None:
     # Tables should be created with Alembic migrations
@@ -30,4 +24,7 @@ def init_db(session: Session) -> None:
             password=settings.FIRST_SUPERUSER_PASSWORD,
             is_superuser=True,
         )
-        user = crud.create_user(session=session, user_create=user_in)
+        user = User.model_validate(user_in, update={"hashed_password": get_password_hash(user_in.password)})
+        session.add(user)
+        session.commit()
+        session.refresh(user)

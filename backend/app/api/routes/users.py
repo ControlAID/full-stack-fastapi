@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import col, delete, func, select
 
-from app import crud
+
 from app.api.deps import (
     CurrentUser,
     SessionDep,
@@ -13,7 +13,6 @@ from app.api.deps import (
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app.models import (
-    Item,
     Message,
     UpdatePassword,
     User,
@@ -34,16 +33,22 @@ router = APIRouter(prefix="/users", tags=["users"])
     dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
-def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
+def read_users(
+    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
+) -> Any:
     """
     Retrieve users.
     """
-
-    count_statement = select(func.count()).select_from(User)
-    count = session.exec(count_statement).one()
-
-    statement = select(User).offset(skip).limit(limit)
-    users = session.exec(statement).all()
+    if current_user.is_superuser:
+        count_statement = select(func.count()).select_from(User)
+        count = session.exec(count_statement).one()
+        statement = select(User).offset(skip).limit(limit)
+        users = session.exec(statement).all()
+    else:
+        count_statement = select(func.count()).select_from(User).where(User.organization_id == current_user.organization_id)
+        count = session.exec(count_statement).one()
+        statement = select(User).where(User.organization_id == current_user.organization_id).offset(skip).limit(limit)
+        users = session.exec(statement).all()
 
     return UsersPublic(data=users, count=count)
 
@@ -51,18 +56,27 @@ def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
 )
-def create_user(*, session: SessionDep, user_in: UserCreate) -> Any:
+def create_user(*, session: SessionDep, user_in: UserCreate, current_user: CurrentUser) -> Any:
     """
     Create new user.
     """
-    user = crud.get_user_by_email(session=session, email=user_in.email)
+    user = session.exec(select(User).where(User.email == user_in.email)).first()
     if user:
         raise HTTPException(
             status_code=400,
             detail="The user with this email already exists in the system.",
         )
 
-    user = crud.create_user(session=session, user_create=user_in)
+    # Multi-tenancy logic
+    if not current_user.is_superuser:
+        user_in.organization_id = current_user.organization_id
+        user_in.is_superuser = False # Non-superusers cannot create superusers
+
+    db_obj = User.model_validate(user_in, update={"hashed_password": get_password_hash(user_in.password)})
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    user = db_obj
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password
@@ -84,7 +98,7 @@ def update_user_me(
     """
 
     if user_in.email:
-        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
+        existing_user = session.exec(select(User).where(User.email == user_in.email)).first()
         if existing_user and existing_user.id != current_user.id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
@@ -144,14 +158,18 @@ def register_user(session: SessionDep, user_in: UserRegister) -> Any:
     """
     Create new user without the need to be logged in.
     """
-    user = crud.get_user_by_email(session=session, email=user_in.email)
+    user = session.exec(select(User).where(User.email == user_in.email)).first()
     if user:
         raise HTTPException(
             status_code=400,
             detail="The user with this email already exists in the system",
         )
     user_create = UserCreate.model_validate(user_in)
-    user = crud.create_user(session=session, user_create=user_create)
+    db_obj = User.model_validate(user_create, update={"hashed_password": get_password_hash(user_create.password)})
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    user = db_obj
     return user
 
 
@@ -195,13 +213,22 @@ def update_user(
             detail="The user with this id does not exist in the system",
         )
     if user_in.email:
-        existing_user = crud.get_user_by_email(session=session, email=user_in.email)
+        existing_user = session.exec(select(User).where(User.email == user_in.email)).first()
         if existing_user and existing_user.id != user_id:
             raise HTTPException(
                 status_code=409, detail="User with this email already exists"
             )
 
-    db_user = crud.update_user(session=session, db_user=db_user, user_in=user_in)
+    user_data = user_in.model_dump(exclude_unset=True)
+    extra_data = {}
+    if "password" in user_data:
+        password = user_data["password"]
+        hashed_password = get_password_hash(password)
+        extra_data["hashed_password"] = hashed_password
+    db_user.sqlmodel_update(user_data, update=extra_data)
+    session.add(db_user)
+    session.commit()
+    session.refresh(db_user)
     return db_user
 
 
@@ -219,8 +246,6 @@ def delete_user(
         raise HTTPException(
             status_code=403, detail="Super users are not allowed to delete themselves"
         )
-    statement = delete(Item).where(col(Item.owner_id) == user_id)
-    session.exec(statement)  # type: ignore
     session.delete(user)
     session.commit()
     return Message(message="User deleted successfully")
