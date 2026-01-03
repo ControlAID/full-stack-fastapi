@@ -22,7 +22,7 @@ export type LicenseCreate = {
     valid_from: string;
     valid_until: string;
     is_active?: boolean;
-    license_key: string;
+    license_key?: (string | null);
     organization_id: string;
 };
 
@@ -72,6 +72,8 @@ export type OrganizationCreate = {
     address: string;
     contact_email: string;
     is_active?: boolean;
+    admin_email: string;
+    admin_password: string;
 };
 
 export type OrganizationPublic = {
@@ -81,6 +83,7 @@ export type OrganizationPublic = {
     contact_email: string;
     is_active?: boolean;
     id: string;
+    db_name?: (string | null);
     created_at: string;
 };
 
@@ -130,6 +133,7 @@ export type UserPublic = {
     full_name?: (string | null);
     organization_id?: (string | null);
     id: string;
+    organization_name?: (string | null);
 };
 
 export type UserRegister = {
@@ -254,6 +258,22 @@ export type OrganizationsDeleteOrganizationData = {
 };
 
 export type OrganizationsDeleteOrganizationResponse = (Message);
+
+export type OrganizationsReadOrganizationUsersData = {
+    limit?: number;
+    organizationId: string;
+    skip?: number;
+};
+
+export type OrganizationsReadOrganizationUsersResponse = (UsersPublic);
+
+export type OrganizationsReadOrganizationLicensesData = {
+    limit?: number;
+    organizationId: string;
+    skip?: number;
+};
+
+export type OrganizationsReadOrganizationLicensesResponse = (LicensesPublic);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UserPublic, UsersService } from "@/client"
+import { type UserPublic, UsersService, OrganizationsService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -27,9 +27,18 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import useAuth from "@/hooks/useAuth"
 import { handleError } from "@/utils"
+import { useQuery } from "@tanstack/react-query"
 
 const formSchema = z
   .object({
@@ -73,8 +82,11 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     },
   })
 
+  const { user: currentUser } = useAuth()
+
+
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
+    mutationFn: (data: any) =>
       UsersService.updateUser({ userId: user.id, requestBody: data }),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
@@ -93,7 +105,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     if (!submitData.password) {
       delete submitData.password
     }
-    mutation.mutate(submitData)
+    mutation.mutate(submitData as any)
   }
 
   return (
@@ -185,6 +197,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                   </FormItem>
                 )}
               />
+
 
               <FormField
                 control={form.control}

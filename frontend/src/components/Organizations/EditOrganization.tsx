@@ -1,5 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { Pencil } from "lucide-react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -15,6 +17,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
     Form,
     FormControl,
@@ -42,6 +45,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) => {
+    const [isOpen, setIsOpen] = useState(false)
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -63,6 +67,7 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
             }),
         onSuccess: () => {
             showSuccessToast("Organization updated successfully")
+            setIsOpen(false)
             onSuccess()
         },
         onError: handleError.bind(showErrorToast),
@@ -80,7 +85,14 @@ const EditOrganization = ({ organization, onSuccess }: EditOrganizationProps) =>
     }
 
     return (
-        <Dialog open onOpenChange={() => onSuccess()}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => setIsOpen(true)}
+            >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Organization
+            </DropdownMenuItem>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Edit Organization</DialogTitle>

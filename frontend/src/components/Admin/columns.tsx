@@ -39,6 +39,15 @@ export const columns: ColumnDef<UserTableData>[] = [
     ),
   },
   {
+    accessorKey: "organization_name",
+    header: "Organization",
+    cell: ({ row }) => (
+      <span className={cn(!row.original.organization_name && "text-muted-foreground italic text-xs")}>
+        {row.original.organization_name || "Global / Staff"}
+      </span>
+    ),
+  },
+  {
     accessorKey: "is_superuser",
     header: "Role",
     cell: ({ row }) => (

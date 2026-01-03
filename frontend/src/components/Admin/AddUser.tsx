@@ -52,7 +52,6 @@ const formSchema = z
       .min(1, { message: "Please confirm your password" }),
     is_superuser: z.boolean(),
     is_active: z.boolean(),
-    organization_id: z.string().uuid().optional().or(z.literal('')),
   })
   .refine((data) => data.password === data.confirm_password, {
     message: "The passwords don't match",
@@ -67,12 +66,6 @@ const AddUser = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const { user: currentUser } = useAuth()
 
-  // Fetch organizations only if superuser
-  const { data: organizationsData } = useQuery({
-    queryKey: ["organizations"],
-    queryFn: () => OrganizationsService.readOrganizations({ skip: 0, limit: 100 }),
-    enabled: isOpen && !!currentUser?.is_superuser,
-  })
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -85,7 +78,6 @@ const AddUser = () => {
       confirm_password: "",
       is_superuser: false,
       is_active: false,
-      organization_id: "",
     },
   })
 
@@ -104,10 +96,8 @@ const AddUser = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    mutation.mutate({
-      ...data,
-      organization_id: data.organization_id || null, // Convert empty string to null
-    })
+    const { confirm_password, ...submitData } = data
+    mutation.mutate(submitData as any)
   }
 
   return (
@@ -163,35 +153,6 @@ const AddUser = () => {
                 )}
               />
 
-              {currentUser?.is_superuser && (
-                <FormField
-                  control={form.control}
-                  name="organization_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Organization</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select an organization (Optional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={"" /* Empty string for no organization (superusers/staff) */}>
-                            None (Global)
-                          </SelectItem>
-                          {organizationsData?.data.map((org) => (
-                            <SelectItem key={org.id} value={org.id}>
-                              {org.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <FormField
                 control={form.control}

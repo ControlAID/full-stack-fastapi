@@ -4,16 +4,15 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 
 import { UsersService } from "@/client"
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
@@ -52,32 +51,30 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuItem
         variant="destructive"
         onSelect={(e) => e.preventDefault()}
         onClick={() => setIsOpen(true)}
       >
-        <Trash2 />
+        <Trash2 className="mr-2 h-4 w-4" />
         Delete User
       </DropdownMenuItem>
-      <DialogContent className="sm:max-w-md">
+      <AlertDialogContent>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-            <DialogDescription>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
               All items associated with this user will also be{" "}
               <strong>permanently deleted.</strong> Are you sure? You will not
               be able to undo this action.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-          <DialogFooter className="mt-4">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={mutation.isPending}>
-                Cancel
-              </Button>
-            </DialogClose>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel disabled={mutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
             <LoadingButton
               variant="destructive"
               type="submit"
@@ -85,10 +82,10 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
             >
               Delete
             </LoadingButton>
-          </DialogFooter>
+          </AlertDialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   )
 }
 

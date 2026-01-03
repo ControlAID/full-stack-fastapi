@@ -40,6 +40,8 @@ def read_licenses(
     return LicensesPublic(data=licenses, count=count)
 
 
+from app.license_utils import generate_license_key
+
 @router.post(
     "/",
     dependencies=[Depends(get_current_active_superuser)],
@@ -51,7 +53,11 @@ def create_license(
     """
     Create new license (Superuser only).
     """
-    license = License.model_validate(license_in)
+    data = license_in.model_dump()
+    if not data.get("license_key"):
+        data["license_key"] = generate_license_key()
+        
+    license = License.model_validate(data)
     session.add(license)
     session.commit()
     session.refresh(license)

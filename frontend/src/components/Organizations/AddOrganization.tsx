@@ -36,6 +36,8 @@ const formSchema = z.object({
     type: z.string().min(1, { message: "Type is required" }),
     address: z.string().min(1, { message: "Address is required" }),
     contact_email: z.string().email({ message: "Invalid email" }),
+    admin_email: z.string().email({ message: "Invalid email" }),
+    admin_password: z.string().min(8, { message: "Password must be at least 8 characters" }),
     is_active: z.boolean(),
 })
 
@@ -54,6 +56,8 @@ const AddOrganization = () => {
             type: "",
             address: "",
             contact_email: "",
+            admin_email: "",
+            admin_password: "",
             is_active: true,
         },
     })
@@ -73,13 +77,7 @@ const AddOrganization = () => {
     })
 
     const onSubmit = (data: FormData) => {
-        mutation.mutate({
-            name: data.name,
-            type: data.type,
-            address: data.address,
-            contact_email: data.contact_email,
-            is_active: data.is_active,
-        })
+        mutation.mutate(data)
     }
 
     return (
@@ -163,6 +161,43 @@ const AddOrganization = () => {
                                     </FormItem>
                                 )}
                             />
+
+                            <div className="border-t pt-4 mt-2">
+                                <h4 className="text-sm font-medium mb-4">Initial Admin Account</h4>
+                                <div className="grid gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="admin_email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    Admin Email <span className="text-destructive">*</span>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="admin@org.com" type="email" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="admin_password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>
+                                                    Admin Password <span className="text-destructive">*</span>
+                                                </FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="********" type="password" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
+                            </div>
 
                             <FormField
                                 control={form.control}

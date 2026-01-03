@@ -110,7 +110,14 @@ export const LicenseCreateSchema = {
             default: true
         },
         license_key: {
-            type: 'string',
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
             title: 'License Key'
         },
         organization_id: {
@@ -120,7 +127,7 @@ export const LicenseCreateSchema = {
         }
     },
     type: 'object',
-    required: ['tier', 'max_locations', 'max_users', 'max_devices', 'valid_from', 'valid_until', 'license_key', 'organization_id'],
+    required: ['tier', 'max_locations', 'max_users', 'max_devices', 'valid_from', 'valid_until', 'organization_id'],
     title: 'LicenseCreate'
 } as const;
 
@@ -348,10 +355,21 @@ export const OrganizationCreateSchema = {
             type: 'boolean',
             title: 'Is Active',
             default: true
+        },
+        admin_email: {
+            type: 'string',
+            format: 'email',
+            title: 'Admin Email'
+        },
+        admin_password: {
+            type: 'string',
+            maxLength: 128,
+            minLength: 8,
+            title: 'Admin Password'
         }
     },
     type: 'object',
-    required: ['name', 'type', 'address', 'contact_email'],
+    required: ['name', 'type', 'address', 'contact_email', 'admin_email', 'admin_password'],
     title: 'OrganizationCreate'
 } as const;
 
@@ -382,6 +400,17 @@ export const OrganizationPublicSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Id'
+        },
+        db_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Db Name'
         },
         created_at: {
             type: 'string',
@@ -637,6 +666,17 @@ export const UserPublicSchema = {
             type: 'string',
             format: 'uuid',
             title: 'Id'
+        },
+        organization_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Organization Name'
         }
     },
     type: 'object',

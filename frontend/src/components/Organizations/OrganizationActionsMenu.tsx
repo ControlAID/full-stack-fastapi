@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import DeleteOrganization from "./DeleteOrganization"
 import EditOrganization from "./EditOrganization"
+import OrganizationDetails from "./OrganizationDetails"
 
 interface OrganizationActionsMenuProps {
     organization: OrganizationPublic
@@ -30,6 +31,7 @@ export const OrganizationActionsMenu = ({ organization }: OrganizationActionsMen
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+                <OrganizationDetails organization={organization} />
                 <EditOrganization organization={organization} onSuccess={() => setOpen(false)} />
                 <DeleteOrganization id={organization.id} onSuccess={() => setOpen(false)} />
             </DropdownMenuContent>

@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, redirect } from "@tanstack/react-router"
 import { Suspense } from "react"
 
-import { LicensesService } from "@/client"
+import { LicensesService, UsersService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import PendingUsers from "@/components/Pending/PendingUsers" // Reusing generic loader
 
@@ -19,6 +19,24 @@ function getLicensesQueryOptions() {
 
 export const Route = createFileRoute("/_layout/licenses")({
   component: Licenses,
+  beforeLoad: async ({ context }) => {
+    const queryClient = context.queryClient
+    try {
+      const user = await queryClient.ensureQueryData({
+        queryKey: ["currentUser"],
+        queryFn: UsersService.readUserMe,
+      })
+      if (!user.is_superuser) {
+        throw redirect({
+          to: "/",
+        })
+      }
+    } catch (e) {
+      throw redirect({
+        to: "/login",
+      })
+    }
+  },
   head: () => ({
     meta: [
       {

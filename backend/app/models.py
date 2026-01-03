@@ -55,6 +55,8 @@ class User(UserBase, table=True):
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
     id: uuid.UUID
+    organization_name: str | None = None
+    organization_id: uuid.UUID | None = None
 
 
 class UsersPublic(SQLModel):
@@ -94,7 +96,8 @@ class OrganizationBase(SQLModel):
     is_active: bool = True
 
 class OrganizationCreate(OrganizationBase):
-    pass
+    admin_email: EmailStr
+    admin_password: str = Field(min_length=8, max_length=128)
 
 class OrganizationUpdate(SQLModel):
     name: str | None = None
@@ -106,6 +109,7 @@ class OrganizationUpdate(SQLModel):
 class Organization(OrganizationBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    db_name: str | None = Field(default=None)
     
     users: list["User"] = Relationship(back_populates="organization")
     licenses: list["License"] = Relationship(back_populates="organization")
@@ -113,6 +117,7 @@ class Organization(OrganizationBase, table=True):
 
 class OrganizationPublic(OrganizationBase):
     id: uuid.UUID
+    db_name: str | None = None
     created_at: datetime
 
 class OrganizationsPublic(SQLModel):
@@ -138,6 +143,7 @@ class LicenseBase(SQLModel):
 
 class LicenseCreate(LicenseBase):
     organization_id: uuid.UUID
+    license_key: str | None = Field(default=None, unique=True, index=True)
 
 class LicenseUpdate(SQLModel):
     tier: LicenseTier | None = None

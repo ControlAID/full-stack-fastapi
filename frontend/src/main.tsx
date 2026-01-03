@@ -13,7 +13,7 @@ import { Toaster } from "./components/ui/sonner"
 import "./index.css"
 import { routeTree } from "./routeTree.gen"
 
-OpenAPI.BASE = import.meta.env.VITE_API_URL
+OpenAPI.BASE = import.meta.env.VITE_API_URL || ""
 OpenAPI.TOKEN = async () => {
   return localStorage.getItem("access_token") || ""
 }
@@ -33,7 +33,10 @@ const queryClient = new QueryClient({
   }),
 })
 
-const router = createRouter({ routeTree })
+const router = createRouter({
+  routeTree,
+  context: { queryClient },
+})
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router

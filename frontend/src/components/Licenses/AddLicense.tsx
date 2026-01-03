@@ -39,10 +39,15 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-    license_key: z.string().min(1, { message: "License Key is required" }),
+    license_key: z.string().optional(),
     tier: z.enum(["starter", "business", "enterprise"]),
     organization_id: z.string().uuid({ message: "Organization is required" }),
     is_active: z.boolean(),
+    max_users: z.number().min(1),
+    max_locations: z.number().min(1),
+    max_devices: z.number().min(1),
+    valid_until: z.string().min(1, { message: "Expiration date is required" }),
+    addon_modules: z.array(z.string()),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -67,6 +72,13 @@ const AddLicense = () => {
             tier: "starter",
             organization_id: "",
             is_active: true,
+            max_users: 10,
+            max_locations: 1,
+            max_devices: 5,
+            valid_until: new Date(
+                new Date().setFullYear(new Date().getFullYear() + 1),
+            ).toISOString().split('T')[0],
+            addon_modules: [],
         },
     })
 
@@ -87,13 +99,8 @@ const AddLicense = () => {
     const onSubmit = (data: FormData) => {
         mutation.mutate({
             ...data,
-            max_locations: data.tier === "starter" ? 1 : 10,
-            max_users: data.tier === "starter" ? 5 : 50,
-            max_devices: data.tier === "starter" ? 5 : 50,
             valid_from: new Date().toISOString(),
-            valid_until: new Date(
-                new Date().setFullYear(new Date().getFullYear() + 1),
-            ).toISOString(),
+            valid_until: new Date(data.valid_until).toISOString(),
         })
     }
 
@@ -146,7 +153,7 @@ const AddLicense = () => {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>
-                                            License Key <span className="text-destructive">*</span>
+                                            License Key <span className="text-muted-foreground text-xs font-normal ml-2">(leave empty for auto-generation)</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input placeholder="XXXX-XXXX-XXXX-XXXX" {...field} />
@@ -174,6 +181,110 @@ const AddLicense = () => {
                                                 <SelectItem value="enterprise">Enterprise</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <div className="grid grid-cols-3 gap-2">
+                                <FormField
+                                    control={form.control}
+                                    name="max_users"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Max Users</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="max_locations"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Max Locs</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="max_devices"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Max Devs</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
+                            <FormField
+                                control={form.control}
+                                name="valid_until"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Expiration Date</FormLabel>
+                                        <FormControl>
+                                            <Input type="date" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="addon_modules"
+                                render={() => (
+                                    <FormItem>
+                                        <div className="mb-4">
+                                            <FormLabel className="text-base">Modules Access</FormLabel>
+                                        </div>
+                                        <div className="flex gap-4">
+                                            {["qr", "face"].map((item) => (
+                                                <FormField
+                                                    key={item}
+                                                    control={form.control}
+                                                    name="addon_modules"
+                                                    render={({ field }) => {
+                                                        return (
+                                                            <FormItem
+                                                                key={item}
+                                                                className="flex flex-row items-center space-x-3 space-y-0"
+                                                            >
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        checked={field.value?.includes(item)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            return checked
+                                                                                ? field.onChange([...field.value, item])
+                                                                                : field.onChange(
+                                                                                    field.value?.filter(
+                                                                                        (value) => value !== item,
+                                                                                    ),
+                                                                                )
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal capitalize">
+                                                                    {item}
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        )
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}

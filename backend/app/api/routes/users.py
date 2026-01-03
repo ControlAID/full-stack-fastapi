@@ -10,10 +10,13 @@ from app.api.deps import (
     SessionDep,
     get_current_active_superuser,
 )
+from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
+from app import tenant_utils
 from app.models import (
     Message,
+    Organization,
     UpdatePassword,
     User,
     UserCreate,
@@ -30,7 +33,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get(
     "/",
-    dependencies=[Depends(get_current_active_superuser)],
     response_model=UsersPublic,
 )
 def read_users(
@@ -42,19 +44,45 @@ def read_users(
     if current_user.is_superuser:
         count_statement = select(func.count()).select_from(User)
         count = session.exec(count_statement).one()
-        statement = select(User).offset(skip).limit(limit)
-        users = session.exec(statement).all()
+        statement = (
+            select(User, Organization.name)
+            .join(Organization, isouter=True)
+            .offset(skip)
+            .limit(limit)
+        )
+        results = session.exec(statement).all()
+        users = []
+        for db_user, org_name in results:
+            user_public = UserPublic.model_validate(db_user)
+            user_public.organization_name = org_name
+            users.append(user_public)
     else:
-        count_statement = select(func.count()).select_from(User).where(User.organization_id == current_user.organization_id)
+        # For organization admins, only show users in their organization
+        count_statement = (
+            select(func.count())
+            .select_from(User)
+            .where(User.organization_id == current_user.organization_id)
+        )
         count = session.exec(count_statement).one()
-        statement = select(User).where(User.organization_id == current_user.organization_id).offset(skip).limit(limit)
-        users = session.exec(statement).all()
+        statement = (
+            select(User, Organization.name)
+            .join(Organization)
+            .where(col(User.organization_id) == current_user.organization_id)
+            .offset(skip)
+            .limit(limit)
+        )
+        results = session.exec(statement).all()
+        users = []
+        for db_user, org_name in results:
+            user_public = UserPublic.model_validate(db_user)
+            user_public.organization_name = org_name
+            users.append(user_public)
 
     return UsersPublic(data=users, count=count)
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=UserPublic
+    "/", response_model=UserPublic
 )
 def create_user(*, session: SessionDep, user_in: UserCreate, current_user: CurrentUser) -> Any:
     """
@@ -77,6 +105,28 @@ def create_user(*, session: SessionDep, user_in: UserCreate, current_user: Curre
     session.commit()
     session.refresh(db_obj)
     user = db_obj
+
+    # 2. Sync to tenant DB if applicable
+    if user.organization_id:
+        organization = session.get(Organization, user.organization_id)
+        if organization and organization.db_name:
+            try:
+                with tenant_utils.get_tenant_session(organization.db_name) as tenant_session:
+                    # Create the same user in tenant DB
+                    tenant_user = User.model_validate(
+                        user_in.model_dump(exclude_unset=True), 
+                        update={
+                            "id": user.id,
+                            "hashed_password": db_obj.hashed_password
+                        }
+                    )
+                    tenant_session.add(tenant_user)
+                    tenant_session.commit()
+            except Exception as e:
+                # Log error but don't fail the whole request? 
+                # Actually, for consistency it might be better to fail or log heavily.
+                print(f"Failed to sync user to tenant DB: {e}")
+
     if settings.emails_enabled and user_in.email:
         email_data = generate_new_account_email(
             email_to=user_in.email, username=user_in.email, password=user_in.password
@@ -193,12 +243,12 @@ def read_user_by_id(
 
 @router.patch(
     "/{user_id}",
-    dependencies=[Depends(get_current_active_superuser)],
     response_model=UserPublic,
 )
 def update_user(
     *,
     session: SessionDep,
+    current_user: CurrentUser,
     user_id: uuid.UUID,
     user_in: UserUpdate,
 ) -> Any:
@@ -212,6 +262,21 @@ def update_user(
             status_code=404,
             detail="The user with this id does not exist in the system",
         )
+    
+    # Permission check
+    if not current_user.is_superuser:
+        if db_user.organization_id != current_user.organization_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You don't have enough privileges to update this user",
+            )
+        
+    user_data = user_in.model_dump(exclude_unset=True)
+    if not current_user.is_superuser:
+        # Non-superusers cannot change organization_id or is_superuser
+        user_data.pop("organization_id", None)
+        user_data.pop("is_superuser", None)
+
     if user_in.email:
         existing_user = session.exec(select(User).where(User.email == user_in.email)).first()
         if existing_user and existing_user.id != user_id:
@@ -219,33 +284,77 @@ def update_user(
                 status_code=409, detail="User with this email already exists"
             )
 
-    user_data = user_in.model_dump(exclude_unset=True)
     extra_data = {}
     if "password" in user_data:
         password = user_data["password"]
         hashed_password = get_password_hash(password)
         extra_data["hashed_password"] = hashed_password
+        # Remove password from user_data as it's not a field in the User table model
+        user_data.pop("password")
+        
     db_user.sqlmodel_update(user_data, update=extra_data)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
+
+    # Sync to tenant DB if applicable
+    if db_user.organization_id:
+        organization = session.get(Organization, db_user.organization_id)
+        if organization and organization.db_name:
+            try:
+                with tenant_utils.get_tenant_session(organization.db_name) as tenant_session:
+                    tenant_user = tenant_session.get(User, user_id)
+                    if tenant_user:
+                        tenant_user.sqlmodel_update(user_data, update=extra_data)
+                        tenant_session.add(tenant_user)
+                        tenant_session.commit()
+                    else:
+                        # If not found in tenant DB, recreate it
+                        tenant_user = User.model_validate(
+                            db_user.model_dump(exclude={"organization", "organization_name"}),
+                            update={"hashed_password": db_user.hashed_password}
+                        )
+                        tenant_session.add(tenant_user)
+                        tenant_session.commit()
+            except Exception as e:
+                print(f"Failed to sync user update to tenant DB: {e}")
+
     return db_user
 
 
-@router.delete("/{user_id}", dependencies=[Depends(get_current_active_superuser)])
+@router.delete("/{user_id}")
 def delete_user(
     session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
 ) -> Message:
     """
     Delete a user.
     """
-    user = session.get(User, user_id)
-    if not user:
+    db_user = session.get(User, user_id)
+    if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user == current_user:
+    if not current_user.is_superuser:
+        if db_user.organization_id != current_user.organization_id:
+            raise HTTPException(
+                status_code=403, detail="You don't have enough privileges"
+            )
+    if db_user == current_user:
         raise HTTPException(
-            status_code=403, detail="Super users are not allowed to delete themselves"
+            status_code=403, detail="Users are not allowed to delete themselves"
         )
-    session.delete(user)
+    
+    # Sync deletion to tenant DB if applicable
+    if db_user.organization_id:
+        organization = session.get(Organization, db_user.organization_id)
+        if organization and organization.db_name:
+            try:
+                with tenant_utils.get_tenant_session(organization.db_name) as tenant_session:
+                    tenant_user = tenant_session.get(User, user_id)
+                    if tenant_user:
+                        tenant_session.delete(tenant_user)
+                        tenant_session.commit()
+            except Exception as e:
+                print(f"Failed to sync user deletion to tenant DB: {e}")
+
+    session.delete(db_user)
     session.commit()
     return Message(message="User deleted successfully")

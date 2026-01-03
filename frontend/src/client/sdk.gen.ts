@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleQrGetStatusResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleQrGetStatusResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, OrganizationsReadOrganizationUsersData, OrganizationsReadOrganizationUsersResponse, OrganizationsReadOrganizationLicensesData, OrganizationsReadOrganizationLicensesResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class LicensesService {
     /**
@@ -330,6 +330,60 @@ export class OrganizationsService {
             url: '/api/v1/organizations/{organization_id}',
             path: {
                 organization_id: data.organizationId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Organization Users
+     * Retrieve users for a specific organization from its tenant DB.
+     * @param data The data for the request.
+     * @param data.organizationId
+     * @param data.skip
+     * @param data.limit
+     * @returns UsersPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOrganizationUsers(data: OrganizationsReadOrganizationUsersData): CancelablePromise<OrganizationsReadOrganizationUsersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/organizations/{organization_id}/users',
+            path: {
+                organization_id: data.organizationId
+            },
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Organization Licenses
+     * Retrieve licenses for a specific organization.
+     * @param data The data for the request.
+     * @param data.organizationId
+     * @param data.skip
+     * @param data.limit
+     * @returns LicensesPublic Successful Response
+     * @throws ApiError
+     */
+    public static readOrganizationLicenses(data: OrganizationsReadOrganizationLicensesData): CancelablePromise<OrganizationsReadOrganizationLicensesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/organizations/{organization_id}/licenses',
+            path: {
+                organization_id: data.organizationId
+            },
+            query: {
+                skip: data.skip,
+                limit: data.limit
             },
             errors: {
                 422: 'Validation Error'
