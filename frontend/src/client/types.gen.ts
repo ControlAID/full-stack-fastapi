@@ -23,6 +23,7 @@ export type LicenseCreate = {
     valid_until: string;
     is_active?: boolean;
     license_key?: (string | null);
+    created_at?: string;
     organization_id: string;
 };
 
@@ -36,6 +37,7 @@ export type LicensePublic = {
     valid_until: string;
     is_active?: boolean;
     license_key: string;
+    created_at?: string;
     id: string;
     organization_id: string;
 };
@@ -57,8 +59,38 @@ export type LicenseUpdate = {
     addon_modules?: (Array<(string)> | null);
 };
 
+export type LogPublic = {
+    id: string;
+    user_id: (string | null);
+    action: string;
+    target: string;
+    details: (string | null);
+    level: string;
+    timestamp: string;
+    ip_address: (string | null);
+    organization_id: (string | null);
+};
+
+export type LogsPublic = {
+    data: Array<LogPublic>;
+    count: number;
+};
+
 export type Message = {
     message: string;
+};
+
+export type ModulePublic = {
+    name: string;
+    version: string;
+    description: string;
+    author: string;
+    license_required: boolean;
+    is_external: boolean;
+};
+
+export type ModulesPublic = {
+    data: Array<ModulePublic>;
 };
 
 export type NewPassword = {
@@ -105,6 +137,23 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
+};
+
+export type SystemCounts = {
+    organizations: number;
+    organizations_growth: number;
+    users: number;
+    users_growth: number;
+    licenses: number;
+    licenses_growth: number;
+};
+
+export type SystemMetrics = {
+    cpu_usage: number;
+    memory_usage: number;
+    db_status: string;
+    counts: SystemCounts;
+    timestamp: string;
 };
 
 export type Token = {
@@ -225,7 +274,28 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type ModuleAuditStatsGetSummaryResponse = (unknown);
+
 export type ModuleQrGetStatusResponse = (unknown);
+
+export type ModuleWeatherConnectorGetCurrentWeatherData = {
+    city?: string;
+};
+
+export type ModuleWeatherConnectorGetCurrentWeatherResponse = (unknown);
+
+export type MonitoringGetMetricsResponse = (SystemMetrics);
+
+export type MonitoringGetLogsData = {
+    level?: (string | null);
+    limit?: number;
+    skip?: number;
+    target?: (string | null);
+};
+
+export type MonitoringGetLogsResponse = (LogsPublic);
+
+export type MonitoringGetModulesResponse = (ModulesPublic);
 
 export type OrganizationsReadOrganizationsData = {
     limit?: number;

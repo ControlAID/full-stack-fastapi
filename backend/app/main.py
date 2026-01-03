@@ -16,9 +16,10 @@ def custom_generate_unique_id(route: APIRoute) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load local plugins
+    # Load local and external plugins
     print("Loading modules...")
     ModuleLoader.load_modules("app.plugins.local")
+    ModuleLoader.load_modules("app.plugins.external")
     
     # Initialize loaded modules and register routes
     for module in ModuleRegistry.get_all_modules():

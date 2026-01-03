@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type LicenseCreate, LicensesService, OrganizationsService } from "@/client"
+import { type LicenseCreate, LicensesService, OrganizationsService, MonitoringService, type ModulePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -62,6 +62,13 @@ const AddLicense = () => {
         queryKey: ["organizations"],
         queryFn: () => OrganizationsService.readOrganizations({ skip: 0, limit: 100 }),
         enabled: isOpen, // Only fetch when dialog opens
+    })
+
+    // Fetch available modules/plugins
+    const { data: modulesData } = useQuery({
+        queryKey: ["modules"],
+        queryFn: () => MonitoringService.getModules(),
+        enabled: isOpen,
     })
 
     const form = useForm<FormData>({
@@ -250,34 +257,34 @@ const AddLicense = () => {
                                         <div className="mb-4">
                                             <FormLabel className="text-base">Modules Access</FormLabel>
                                         </div>
-                                        <div className="flex gap-4">
-                                            {["qr", "face"].map((item) => (
+                                        <div className="flex flex-wrap gap-4">
+                                            {modulesData?.data.map((module: ModulePublic) => (
                                                 <FormField
-                                                    key={item}
+                                                    key={module.name}
                                                     control={form.control}
                                                     name="addon_modules"
                                                     render={({ field }) => {
                                                         return (
                                                             <FormItem
-                                                                key={item}
+                                                                key={module.name}
                                                                 className="flex flex-row items-center space-x-3 space-y-0"
                                                             >
                                                                 <FormControl>
                                                                     <Checkbox
-                                                                        checked={field.value?.includes(item)}
+                                                                        checked={field.value?.includes(module.name)}
                                                                         onCheckedChange={(checked) => {
                                                                             return checked
-                                                                                ? field.onChange([...field.value, item])
+                                                                                ? field.onChange([...field.value, module.name])
                                                                                 : field.onChange(
                                                                                     field.value?.filter(
-                                                                                        (value) => value !== item,
+                                                                                        (value) => value !== module.name,
                                                                                     ),
                                                                                 )
                                                                         }}
                                                                     />
                                                                 </FormControl>
-                                                                <FormLabel className="font-normal capitalize">
-                                                                    {item}
+                                                                <FormLabel className="font-normal">
+                                                                    {module.name}
                                                                 </FormLabel>
                                                             </FormItem>
                                                         )

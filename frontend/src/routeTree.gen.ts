@@ -17,8 +17,10 @@ import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
 import { Route as LayoutOrganizationsRouteImport } from './routes/_layout/organizations'
+import { Route as LayoutLogsRouteImport } from './routes/_layout/logs'
 import { Route as LayoutLicensesRouteImport } from './routes/_layout/licenses'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutAdminIndexRouteImport } from './routes/_layout/admin/index'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -59,6 +61,11 @@ const LayoutOrganizationsRoute = LayoutOrganizationsRouteImport.update({
   path: '/organizations',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutLogsRoute = LayoutLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutLicensesRoute = LayoutLicensesRouteImport.update({
   id: '/licenses',
   path: '/licenses',
@@ -69,28 +76,36 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutAdminIndexRoute = LayoutAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutAdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof LayoutAdminRoute
+  '/admin': typeof LayoutAdminRouteWithChildren
   '/licenses': typeof LayoutLicensesRoute
+  '/logs': typeof LayoutLogsRoute
   '/organizations': typeof LayoutOrganizationsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/admin/': typeof LayoutAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/admin': typeof LayoutAdminRoute
   '/licenses': typeof LayoutLicensesRoute
+  '/logs': typeof LayoutLogsRoute
   '/organizations': typeof LayoutOrganizationsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/admin': typeof LayoutAdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -99,11 +114,13 @@ export interface FileRoutesById {
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
-  '/_layout/admin': typeof LayoutAdminRoute
+  '/_layout/admin': typeof LayoutAdminRouteWithChildren
   '/_layout/licenses': typeof LayoutLicensesRoute
+  '/_layout/logs': typeof LayoutLogsRoute
   '/_layout/organizations': typeof LayoutOrganizationsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/admin/': typeof LayoutAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -114,20 +131,23 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin'
     | '/licenses'
+    | '/logs'
     | '/organizations'
     | '/settings'
     | '/'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
     | '/recover-password'
     | '/reset-password'
     | '/signup'
-    | '/admin'
     | '/licenses'
+    | '/logs'
     | '/organizations'
     | '/settings'
     | '/'
+    | '/admin'
   id:
     | '__root__'
     | '/_layout'
@@ -137,9 +157,11 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_layout/admin'
     | '/_layout/licenses'
+    | '/_layout/logs'
     | '/_layout/organizations'
     | '/_layout/settings'
     | '/_layout/'
+    | '/_layout/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -208,6 +230,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutOrganizationsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/logs': {
+      id: '/_layout/logs'
+      path: '/logs'
+      fullPath: '/logs'
+      preLoaderRoute: typeof LayoutLogsRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/licenses': {
       id: '/_layout/licenses'
       path: '/licenses'
@@ -222,20 +251,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/admin/': {
+      id: '/_layout/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof LayoutAdminIndexRouteImport
+      parentRoute: typeof LayoutAdminRoute
+    }
   }
 }
 
+interface LayoutAdminRouteChildren {
+  LayoutAdminIndexRoute: typeof LayoutAdminIndexRoute
+}
+
+const LayoutAdminRouteChildren: LayoutAdminRouteChildren = {
+  LayoutAdminIndexRoute: LayoutAdminIndexRoute,
+}
+
+const LayoutAdminRouteWithChildren = LayoutAdminRoute._addFileChildren(
+  LayoutAdminRouteChildren,
+)
+
 interface LayoutRouteChildren {
-  LayoutAdminRoute: typeof LayoutAdminRoute
+  LayoutAdminRoute: typeof LayoutAdminRouteWithChildren
   LayoutLicensesRoute: typeof LayoutLicensesRoute
+  LayoutLogsRoute: typeof LayoutLogsRoute
   LayoutOrganizationsRoute: typeof LayoutOrganizationsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
-  LayoutAdminRoute: LayoutAdminRoute,
+  LayoutAdminRoute: LayoutAdminRouteWithChildren,
   LayoutLicensesRoute: LayoutLicensesRoute,
+  LayoutLogsRoute: LayoutLogsRoute,
   LayoutOrganizationsRoute: LayoutOrganizationsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
   LayoutIndexRoute: LayoutIndexRoute,

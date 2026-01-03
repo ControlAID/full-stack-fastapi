@@ -120,6 +120,11 @@ export const LicenseCreateSchema = {
             ],
             title: 'License Key'
         },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
+        },
         organization_id: {
             type: 'string',
             format: 'uuid',
@@ -174,6 +179,11 @@ export const LicensePublicSchema = {
         license_key: {
             type: 'string',
             title: 'License Key'
+        },
+        created_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Created At'
         },
         id: {
             type: 'string',
@@ -303,6 +313,101 @@ export const LicensesPublicSchema = {
     title: 'LicensesPublic'
 } as const;
 
+export const LogPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        user_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'User Id'
+        },
+        action: {
+            type: 'string',
+            title: 'Action'
+        },
+        target: {
+            type: 'string',
+            title: 'Target'
+        },
+        details: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Details'
+        },
+        level: {
+            type: 'string',
+            title: 'Level'
+        },
+        timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Timestamp'
+        },
+        ip_address: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Ip Address'
+        },
+        organization_id: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'uuid'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Organization Id'
+        }
+    },
+    type: 'object',
+    required: ['id', 'user_id', 'action', 'target', 'details', 'level', 'timestamp', 'ip_address', 'organization_id'],
+    title: 'LogPublic'
+} as const;
+
+export const LogsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/LogPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'LogsPublic'
+} as const;
+
 export const MessageSchema = {
     properties: {
         message: {
@@ -313,6 +418,53 @@ export const MessageSchema = {
     type: 'object',
     required: ['message'],
     title: 'Message'
+} as const;
+
+export const ModulePublicSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        version: {
+            type: 'string',
+            title: 'Version'
+        },
+        description: {
+            type: 'string',
+            title: 'Description'
+        },
+        author: {
+            type: 'string',
+            title: 'Author'
+        },
+        license_required: {
+            type: 'boolean',
+            title: 'License Required'
+        },
+        is_external: {
+            type: 'boolean',
+            title: 'Is External'
+        }
+    },
+    type: 'object',
+    required: ['name', 'version', 'description', 'author', 'license_required', 'is_external'],
+    title: 'ModulePublic'
+} as const;
+
+export const ModulesPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/ModulePublic'
+            },
+            type: 'array',
+            title: 'Data'
+        }
+    },
+    type: 'object',
+    required: ['data'],
+    title: 'ModulesPublic'
 } as const;
 
 export const NewPasswordSchema = {
@@ -527,6 +679,66 @@ export const PrivateUserCreateSchema = {
     type: 'object',
     required: ['email', 'password', 'full_name'],
     title: 'PrivateUserCreate'
+} as const;
+
+export const SystemCountsSchema = {
+    properties: {
+        organizations: {
+            type: 'integer',
+            title: 'Organizations'
+        },
+        organizations_growth: {
+            type: 'number',
+            title: 'Organizations Growth'
+        },
+        users: {
+            type: 'integer',
+            title: 'Users'
+        },
+        users_growth: {
+            type: 'number',
+            title: 'Users Growth'
+        },
+        licenses: {
+            type: 'integer',
+            title: 'Licenses'
+        },
+        licenses_growth: {
+            type: 'number',
+            title: 'Licenses Growth'
+        }
+    },
+    type: 'object',
+    required: ['organizations', 'organizations_growth', 'users', 'users_growth', 'licenses', 'licenses_growth'],
+    title: 'SystemCounts'
+} as const;
+
+export const SystemMetricsSchema = {
+    properties: {
+        cpu_usage: {
+            type: 'number',
+            title: 'Cpu Usage'
+        },
+        memory_usage: {
+            type: 'number',
+            title: 'Memory Usage'
+        },
+        db_status: {
+            type: 'string',
+            title: 'Db Status'
+        },
+        counts: {
+            '$ref': '#/components/schemas/SystemCounts'
+        },
+        timestamp: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Timestamp'
+        }
+    },
+    type: 'object',
+    required: ['cpu_usage', 'memory_usage', 'db_status', 'counts', 'timestamp'],
+    title: 'SystemMetrics'
 } as const;
 
 export const TokenSchema = {

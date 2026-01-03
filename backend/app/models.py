@@ -49,6 +49,7 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     organization: Optional["Organization"] = Relationship(back_populates="users")
 
 
@@ -140,6 +141,7 @@ class LicenseBase(SQLModel):
     valid_until: datetime
     is_active: bool = True
     license_key: str = Field(unique=True, index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class LicenseCreate(LicenseBase):
     organization_id: uuid.UUID
@@ -205,3 +207,63 @@ class AccessEvent(SQLModel, table=True):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     
     event_metadata: Dict[str, Any] = Field(default={}, sa_column=Column(JSON))
+
+
+class AuditLog(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="user.id")
+    action: str
+    target: str
+    details: str | None = None
+    level: str = Field(default="info")  # info, warning, error, success
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    ip_address: str | None = None
+    
+    # Track which organization this action belongs to, if applicable
+    organization_id: Optional[uuid.UUID] = Field(default=None, foreign_key="organization.id")
+
+
+class LogPublic(SQLModel):
+    id: uuid.UUID
+    user_id: Optional[uuid.UUID]
+    action: str
+    target: str
+    details: str | None
+    level: str
+    timestamp: datetime
+    ip_address: str | None
+    organization_id: Optional[uuid.UUID]
+
+
+class LogsPublic(SQLModel):
+    data: list[LogPublic]
+    count: int
+
+class SystemCounts(SQLModel):
+    organizations: int
+    organizations_growth: float
+    users: int
+    users_growth: float
+    licenses: int
+    licenses_growth: float
+
+
+class SystemMetrics(SQLModel):
+    cpu_usage: float
+    memory_usage: float
+    db_status: str
+    counts: SystemCounts
+    timestamp: datetime
+
+
+class ModulePublic(SQLModel):
+    name: str
+    version: str
+    description: str
+    author: str
+    license_required: bool
+    is_external: bool
+
+
+class ModulesPublic(SQLModel):
+    data: list[ModulePublic]

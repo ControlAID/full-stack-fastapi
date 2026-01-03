@@ -1,9 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Pencil } from "lucide-react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type LicensePublic, type LicenseUpdate, LicensesService } from "@/client"
+import { type LicensePublic, type LicenseUpdate, LicensesService, MonitoringService, type ModulePublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -15,6 +17,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
     Form,
     FormControl,
@@ -54,8 +57,16 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const EditLicense = ({ license, onSuccess }: EditLicenseProps) => {
+    const [isOpen, setIsOpen] = useState(false)
     const queryClient = useQueryClient()
     const { showSuccessToast, showErrorToast } = useCustomToast()
+
+    // Fetch available modules/plugins
+    const { data: modulesData } = useQuery({
+        queryKey: ["modules"],
+        queryFn: () => MonitoringService.getModules(),
+        enabled: isOpen,
+    })
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -97,7 +108,14 @@ const EditLicense = ({ license, onSuccess }: EditLicenseProps) => {
     }
 
     return (
-        <Dialog open onOpenChange={() => onSuccess()}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                onClick={() => setIsOpen(true)}
+            >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit License
+            </DropdownMenuItem>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Edit License</DialogTitle>
@@ -211,34 +229,34 @@ const EditLicense = ({ license, onSuccess }: EditLicenseProps) => {
                                         <div className="mb-4">
                                             <FormLabel className="text-base">Modules Access</FormLabel>
                                         </div>
-                                        <div className="flex gap-4">
-                                            {["qr", "face"].map((item) => (
+                                        <div className="flex flex-wrap gap-4">
+                                            {modulesData?.data.map((module: ModulePublic) => (
                                                 <FormField
-                                                    key={item}
+                                                    key={module.name}
                                                     control={form.control}
                                                     name="addon_modules"
                                                     render={({ field }) => {
                                                         return (
                                                             <FormItem
-                                                                key={item}
+                                                                key={module.name}
                                                                 className="flex flex-row items-center space-x-3 space-y-0"
                                                             >
                                                                 <FormControl>
                                                                     <Checkbox
-                                                                        checked={field.value?.includes(item)}
+                                                                        checked={field.value?.includes(module.name)}
                                                                         onCheckedChange={(checked) => {
                                                                             return checked
-                                                                                ? field.onChange([...field.value, item])
+                                                                                ? field.onChange([...field.value, module.name])
                                                                                 : field.onChange(
                                                                                     field.value?.filter(
-                                                                                        (value) => value !== item,
+                                                                                        (value) => value !== module.name,
                                                                                     ),
                                                                                 )
                                                                         }}
                                                                     />
                                                                 </FormControl>
-                                                                <FormLabel className="font-normal capitalize">
-                                                                    {item}
+                                                                <FormLabel className="font-normal">
+                                                                    {module.name}
                                                                 </FormLabel>
                                                             </FormItem>
                                                         )

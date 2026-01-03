@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { Building2, Key, Users, Info, ShieldCheck } from "lucide-react"
+import { Building2, Key, Info, ShieldCheck } from "lucide-react"
 import { useState } from "react"
 
 import { type OrganizationPublic, OrganizationsService } from "@/client"

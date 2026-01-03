@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleQrGetStatusResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, OrganizationsReadOrganizationUsersData, OrganizationsReadOrganizationUsersResponse, OrganizationsReadOrganizationLicensesData, OrganizationsReadOrganizationLicensesResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { LicensesReadLicensesData, LicensesReadLicensesResponse, LicensesCreateLicenseData, LicensesCreateLicenseResponse, LicensesReadLicenseData, LicensesReadLicenseResponse, LicensesUpdateLicenseData, LicensesUpdateLicenseResponse, LicensesDeleteLicenseData, LicensesDeleteLicenseResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, ModuleAuditStatsGetSummaryResponse, ModuleQrGetStatusResponse, ModuleWeatherConnectorGetCurrentWeatherData, ModuleWeatherConnectorGetCurrentWeatherResponse, MonitoringGetMetricsResponse, MonitoringGetLogsData, MonitoringGetLogsResponse, MonitoringGetModulesResponse, OrganizationsReadOrganizationsData, OrganizationsReadOrganizationsResponse, OrganizationsCreateOrganizationData, OrganizationsCreateOrganizationResponse, OrganizationsReadOrganizationData, OrganizationsReadOrganizationResponse, OrganizationsUpdateOrganizationData, OrganizationsUpdateOrganizationResponse, OrganizationsDeleteOrganizationData, OrganizationsDeleteOrganizationResponse, OrganizationsReadOrganizationUsersData, OrganizationsReadOrganizationUsersResponse, OrganizationsReadOrganizationLicensesData, OrganizationsReadOrganizationLicensesResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class LicensesService {
     /**
@@ -213,6 +213,21 @@ export class LoginService {
     }
 }
 
+export class ModuleAuditStatsService {
+    /**
+     * Get Summary
+     * Retorna un resumen de logs por nivel.
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static getSummary(): CancelablePromise<ModuleAuditStatsGetSummaryResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/modules/audit_stats/summary'
+        });
+    }
+}
+
 export class ModuleQrService {
     /**
      * Get Status
@@ -223,6 +238,84 @@ export class ModuleQrService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/modules/qr/status'
+        });
+    }
+}
+
+export class ModuleWeatherConnectorService {
+    /**
+     * Get Current Weather
+     * Simula la obtención de clima desde una API externa.
+     * @param data The data for the request.
+     * @param data.city
+     * @returns unknown Successful Response
+     * @throws ApiError
+     */
+    public static getCurrentWeather(data: ModuleWeatherConnectorGetCurrentWeatherData = {}): CancelablePromise<ModuleWeatherConnectorGetCurrentWeatherResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/modules/weather_connector/current',
+            query: {
+                city: data.city
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class MonitoringService {
+    /**
+     * Get Metrics
+     * Get real-time system metrics and summary statistics.
+     * @returns SystemMetrics Successful Response
+     * @throws ApiError
+     */
+    public static getMetrics(): CancelablePromise<MonitoringGetMetricsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/monitoring/metrics'
+        });
+    }
+    
+    /**
+     * Get Logs
+     * Get paginated audit logs for superusers.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.level
+     * @param data.target
+     * @returns LogsPublic Successful Response
+     * @throws ApiError
+     */
+    public static getLogs(data: MonitoringGetLogsData = {}): CancelablePromise<MonitoringGetLogsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/monitoring/logs',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                level: data.level,
+                target: data.target
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Get Modules
+     * Get all registered modules.
+     * @returns ModulesPublic Successful Response
+     * @throws ApiError
+     */
+    public static getModules(): CancelablePromise<MonitoringGetModulesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/monitoring/modules'
         });
     }
 }

@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import col, delete, func, select
 
 
@@ -14,6 +14,7 @@ from app.core import security
 from app.core.config import settings
 from app.core.security import get_password_hash, verify_password
 from app import tenant_utils
+from app.core.audit import log_action
 from app.models import (
     Message,
     Organization,
@@ -84,7 +85,7 @@ def read_users(
 @router.post(
     "/", response_model=UserPublic
 )
-def create_user(*, session: SessionDep, user_in: UserCreate, current_user: CurrentUser) -> Any:
+def create_user(*, session: SessionDep, request: Request, user_in: UserCreate, current_user: CurrentUser) -> Any:
     """
     Create new user.
     """
@@ -127,15 +128,16 @@ def create_user(*, session: SessionDep, user_in: UserCreate, current_user: Curre
                 # Actually, for consistency it might be better to fail or log heavily.
                 print(f"Failed to sync user to tenant DB: {e}")
 
-    if settings.emails_enabled and user_in.email:
-        email_data = generate_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
-        send_email(
-            email_to=user_in.email,
-            subject=email_data.subject,
-            html_content=email_data.html_content,
-        )
+    # Log user creation
+    log_action(
+        session=session,
+        action="create",
+        target="user",
+        details=f"User {user.email} created",
+        user=current_user,
+        request=request
+    )
+    
     return user
 
 
@@ -248,6 +250,7 @@ def read_user_by_id(
 def update_user(
     *,
     session: SessionDep,
+    request: Request,
     current_user: CurrentUser,
     user_id: uuid.UUID,
     user_in: UserUpdate,
@@ -319,12 +322,22 @@ def update_user(
             except Exception as e:
                 print(f"Failed to sync user update to tenant DB: {e}")
 
+    # Log user update
+    log_action(
+        session=session,
+        action="update",
+        target="user",
+        details=f"User {db_user.email} updated",
+        user=current_user,
+        request=request
+    )
+
     return db_user
 
 
 @router.delete("/{user_id}")
 def delete_user(
-    session: SessionDep, current_user: CurrentUser, user_id: uuid.UUID
+    session: SessionDep, request: Request, current_user: CurrentUser, user_id: uuid.UUID
 ) -> Message:
     """
     Delete a user.
@@ -354,6 +367,16 @@ def delete_user(
                         tenant_session.commit()
             except Exception as e:
                 print(f"Failed to sync user deletion to tenant DB: {e}")
+
+    # Log user deletion
+    log_action(
+        session=session,
+        action="delete",
+        target="user",
+        details=f"User {db_user.email} deleted",
+        user=current_user,
+        request=request
+    )
 
     session.delete(db_user)
     session.commit()

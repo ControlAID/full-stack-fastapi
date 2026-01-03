@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import func, select
 
 from app.api.deps import (
@@ -66,6 +66,7 @@ def read_organization(
 
 
 from app import tenant_utils
+from app.core.audit import log_action
 
 @router.post(
     "/",
@@ -73,7 +74,7 @@ from app import tenant_utils
     response_model=OrganizationPublic,
 )
 def create_organization(
-    *, session: SessionDep, organization_in: OrganizationCreate
+    *, session: SessionDep, request: Request, current_user: CurrentUser, organization_in: OrganizationCreate
 ) -> Any:
     """
     Create new organization (Superuser only).
@@ -117,6 +118,17 @@ def create_organization(
         )
         session.add(user)
         session.commit()
+        
+        # Log organization creation
+        log_action(
+            session=session,
+            action="create",
+            target="organization",
+            details=f"Organization {organization.name} created",
+            level="success",
+            user=current_user,
+            request=request
+        )
         
     except Exception as e:
         # If DB creation fails, we might want to delete the org record or log error
@@ -163,7 +175,7 @@ def update_organization(
     response_model=Message,
 )
 def delete_organization(
-    *, session: SessionDep, organization_id: uuid.UUID
+    *, session: SessionDep, request: Request, current_user: CurrentUser, organization_id: uuid.UUID
 ) -> Any:
     """
     Delete an organization (Superuser only).
@@ -172,8 +184,21 @@ def delete_organization(
     if not organization:
         raise HTTPException(status_code=404, detail="Organization not found")
         
+    org_name = organization.name
     session.delete(organization)
     session.commit()
+    
+    # Log organization deletion
+    log_action(
+        session=session,
+        action="delete",
+        target="organization",
+        details=f"Organization {org_name} deleted",
+        level="success",
+        user=current_user,
+        request=request
+    )
+    
     return Message(message="Organization deleted successfully")
 
 

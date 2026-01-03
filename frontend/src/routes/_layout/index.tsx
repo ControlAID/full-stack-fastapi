@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Building2, Key, Users, Activity, TrendingUp } from "lucide-react"
 
-import { UsersService, OrganizationsService, LicensesService } from "@/client"
+import { MonitoringService, UsersService, OrganizationsService, LicensesService } from "@/client"
 import useAuth from "@/hooks/useAuth"
 
 export const Route = createFileRoute("/_layout/")({
@@ -34,10 +34,18 @@ function Dashboard() {
     queryFn: () => LicensesService.readLicenses({ limit: 1 }),
   })
 
+  const { data: metrics } = useQuery({
+    queryKey: ["monitoring-metrics"],
+    queryFn: () => MonitoringService.getMetrics(),
+    refetchInterval: 5000, // Refresh every 5 seconds
+    enabled: currentUser?.is_superuser,
+  })
+
   const stats = [
     {
       label: "Total Users",
       value: users?.count || 0,
+      growth: metrics?.counts.users_growth,
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
@@ -45,6 +53,7 @@ function Dashboard() {
     {
       label: "Organizations",
       value: organizations?.count || 0,
+      growth: metrics?.counts.organizations_growth,
       icon: Building2,
       color: "text-emerald-600",
       bgColor: "bg-emerald-100",
@@ -52,13 +61,15 @@ function Dashboard() {
     {
       label: "Active Licenses",
       value: licenses?.count || 0,
+      growth: metrics?.counts.licenses_growth,
       icon: Key,
       color: "text-amber-600",
       bgColor: "bg-amber-100",
     },
     {
-      label: "System Health",
-      value: "100%",
+      label: "CPU Usage",
+      value: metrics ? `${metrics.cpu_usage.toFixed(1)}%` : "N/A",
+      growth: 0, // No growth for CPU
       icon: Activity,
       color: "text-rose-600",
       bgColor: "bg-rose-100",
@@ -94,9 +105,9 @@ function Dashboard() {
                 <div className="absolute -right-2 -top-2 h-24 w-24 rounded-full bg-current opacity-5 blur-2xl group-hover:opacity-10" />
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-xs font-semibold text-emerald-600">
-              <TrendingUp className="h-3 w-3" />
-              <span>+12% from last month</span>
+            <div className={`mt-4 flex items-center gap-2 text-xs font-semibold ${stat.growth && stat.growth >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <TrendingUp className={`h-3 w-3 ${stat.growth && stat.growth < 0 ? 'rotate-180' : ''}`} />
+              <span>{stat.growth !== undefined ? `${stat.growth >= 0 ? '+' : ''}${stat.growth.toFixed(1)}% from last month` : "N/A from last month"}</span>
             </div>
           </div>
         ))}
@@ -130,21 +141,29 @@ function Dashboard() {
         <div className="rounded-2xl border bg-card p-6 shadow-sm overflow-hidden relative">
           <div className="absolute right-0 top-0 h-full w-48 bg-linear-to-l from-primary/5 to-transparent -z-1" />
           <h3 className="text-xl font-bold mb-2">System Status</h3>
-          <p className="text-muted-foreground mb-6">All systems are operational across all regions.</p>
+          <p className="text-muted-foreground mb-6">Real-time health monitoring.</p>
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Database Sync</span>
-              <span className="font-medium text-emerald-600">Stable (0.2ms)</span>
+              <span className="text-muted-foreground">Database Status</span>
+              <span className={`font-medium ${metrics?.db_status === 'stable' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {metrics?.db_status || "Checking..."}
+              </span>
             </div>
             <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-full w-[98%] rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${metrics?.db_status === 'stable' ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                style={{ width: metrics?.db_status === 'stable' ? '100%' : '0%' }}
+              />
             </div>
             <div className="flex items-center justify-between text-sm pt-2">
-              <span className="text-muted-foreground">API Latency</span>
-              <span className="font-medium text-emerald-600">Fast (45ms)</span>
+              <span className="text-muted-foreground">Memory Usage</span>
+              <span className="font-medium text-blue-600">{metrics ? `${metrics.memory_usage.toFixed(1)}%` : "N/A"}</span>
             </div>
             <div className="h-2 w-full rounded-full bg-secondary">
-              <div className="h-full w-[95%] rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
+              <div
+                className="h-full bg-blue-500 rounded-full shadow-sm shadow-blue-500/50 transition-all duration-500"
+                style={{ width: metrics ? `${metrics.memory_usage}%` : '0%' }}
+              />
             </div>
           </div>
         </div>

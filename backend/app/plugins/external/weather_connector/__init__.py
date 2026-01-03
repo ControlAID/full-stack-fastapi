@@ -1,0 +1,1 @@
+from .weather_connector import WeatherConnectorModule
